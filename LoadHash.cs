@@ -2,8 +2,39 @@ namespace HashAxe.LoadHash
 {
     class HashLoader
     {
-        // the HASHLIST_LENGTH is the number of lines in the hashes.txt file. This number should be 1.3 times the total number of hashes.
-        const int HASHLIST_LENGTH = 49999991;
+        // the LOAD_FACTOR is the percentage of the nodes that will contain a hash.
+        static const int LOAD_FACTOR = 0.6;
+        // The name speaks for itself. It's the number of hashes that we are getting from virusshare.
+        static readonly int NUM_HASHES;
+        // HASHLIST_LENGTH is the number of nodes we have that can contain md5 hashes.
+        static readonly int HASHLIST_LENGTH;
+
+        static HashLoader() {
+            NUM_HASHES = 
+            HASHLIST_LENGTH = this.NextPrime(2 * NUM_HASHES + 1);
+        }
+
+        private static int NextPrime(int number) {    
+            while(true) {
+                bool isPrime = true;
+                //increment the number by 1 each time
+
+                int squaredNumber = (int)Math.Sqrt(number);
+
+                //start at 2 and increment by 1 until it gets to the squared number
+                for (int i = 2; i <= squaredNumber; i++) {
+                    //how do I check all i's?
+                    if (number % i == 0) {
+                        isPrime = false;
+                        break;
+                    }
+                }
+                if(isPrime) {
+                    return number;
+                }
+                number = number + 2;
+            }
+        }
 
         // This is the Hashunction that will be used to determine which line of hashes.txt it will occupy.
         public int HashMD5(string md5)
@@ -11,6 +42,6 @@ namespace HashAxe.LoadHash
             return Convert.ToInt32(md5.Substring(0, 7), 16) % HASHLIST_LENGTH;
         }
 
-        
+
     }
 }
