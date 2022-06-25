@@ -9,7 +9,7 @@ namespace HashAxe.LoadHash
 
         static HashLoader() {
             NUM_HASHES = 34;
-            HASHLIST_LENGTH = this.NextPrime(2 * NUM_HASHES + 1);
+            HASHLIST_LENGTH = NextPrime(2 * NUM_HASHES + 1);
         }
 
         public HashLoader() {}
@@ -36,24 +36,13 @@ namespace HashAxe.LoadHash
             }
         }
 
-        public void fillHashes(FileStream fs) {
-            fs.write(new byte[NUM_HASHES * 16], 0, NUM_HASHES * 16);
-        }
-
-        public void uploadHashes() {
-            
-        }
-
         // This is the Hashunction that will be used to determine which line of hashes.txt it will occupy.
         public int HashMD5(string md5)
         {
             return Convert.ToInt32(md5.Substring(0, 7), 16) % HASHLIST_LENGTH;
         }
 
-        public static void Main(string[] args) {
-            using(FileStream fs = File.Create("../hashes.dat")) {
-                this.fillHashes(fs);
-            }
+        public void Main(string[] args) {
         }
     }
 }
