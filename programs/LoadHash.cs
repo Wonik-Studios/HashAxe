@@ -3,13 +3,13 @@ namespace HashAxe.LoadHash
     class HashLoader
     {
         // The name speaks for itself. It's the number of hashes that we are getting from virusshare.
-        public static readonly int NUM_HASHES;
+        private static readonly int NUM_HASHES;
         // HASHLIST_LENGTH is the number of nodes we have that can contain md5 hashes.
-        public static readonly int HASHLIST_LENGTH;
+        private static readonly int HASHLIST_LENGTH;
 
         static HashLoader() {
             NUM_HASHES = 34;
-            HASHLIST_LENGTH = this.NextPrime(2 * NUM_HASHES + 1);
+            HASHLIST_LENGTH = NextPrime(2 * NUM_HASHES + 1);
         }
 
         public HashLoader() {}
@@ -36,8 +36,8 @@ namespace HashAxe.LoadHash
             }
         }
 
-        public void fillHashes(FileStream fs) {
-            fs.write(new byte[NUM_HASHES * 16], 0, NUM_HASHES * 16);
+        public static void FillHashes(FileStream fs) {
+            fs.Write(new byte[NUM_HASHES * 16], 0, NUM_HASHES * 16);
         }
 
         public void uploadHashes() {
@@ -52,7 +52,7 @@ namespace HashAxe.LoadHash
 
         public static void Main(string[] args) {
             using(FileStream fs = File.Create("../hashes.dat")) {
-                this.fillHashes(fs);
+                HashLoader.FillHashes(fs);
             }
         }
     }
