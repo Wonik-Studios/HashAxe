@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 
 namespace HashAxe.MD5HashSet
@@ -17,6 +18,13 @@ namespace HashAxe.MD5HashSet
         public MD5HashSet(int NUM_HASHES) {
             this.NUM_HASHES = NUM_HASHES;
             this.HASHLIST_LENGTH = MD5HashSet.NextPrime(this.NUM_HASHES * 2 + 1);
+            Console.Write("This is the HASHLIST_LENGTH: " + this.HASHLIST_LENGTH);
+
+            int i = 0;
+            while(HASHLIST_LENGTH > Math.Pow(16, i)) {
+                i++;
+            }
+            this.NUM_HEXADECIMAL = i;
         }
 
         private static int NextPrime(int number) {
@@ -38,16 +46,16 @@ namespace HashAxe.MD5HashSet
         }
 
         public void FillHashes(FileStream fs) {
-            fs.Write(new byte[NUM_HASHES * 16], 0, NUM_HASHES * 16);
+            fs.Write(new byte[HASHLIST_LENGTH * 32], 0, HASHLIST_LENGTH * 32);
         }
 
         public void UploadHash(FileStream fs, string md5) {
             int hash = this.HashMD5(md5);
-            byte[] buffer = new byte[NUM_HEXADECIMAL];
+            byte[] buffer = new byte[32];
             int inc = 0;
 
             do {
-                fs.Read(buffer, (hash + inc * inc) % HASHLIST_LENGTH, NUM_HEXADECIMAL);
+                fs.Read(buffer, (hash + inc * inc) % HASHLIST_LENGTH, buffer.Length);
                 inc++;
             } while(buffer[0] != 0);
             fs.Write(Encoding.ASCII.GetBytes(md5));
@@ -55,11 +63,11 @@ namespace HashAxe.MD5HashSet
 
         public bool Contains(FileStream fs, string md5) {
             byte[] hashAscii = Encoding.ASCII.GetBytes(md5);
-            byte[] buffer = new byte[NUM_HEXADECIMAL];
+            byte[] buffer = new byte[32];
             int hash = this.HashMD5(md5);
             int inc = 0;
             while(true) {
-                fs.Read(buffer, hash + inc * inc, NUM_HEXADECIMAL);
+                fs.Read(buffer, hash + inc * inc, buffer.Length);
                 if(buffer[0] == 0) {
                     return false;
                 }
@@ -71,7 +79,11 @@ namespace HashAxe.MD5HashSet
         }
 
         public void WriteHashes() {
-            
+            byte[] buffer = new byte[32 * HASHLIST_LENGTH];
+            using(FileStream fs = File.Create("data/hashes.dat")) {
+                fs.Read(buffer, 0, buffer.Length);
+                Console.Write(Encoding.ASCII.GetString(buffer));
+            }
         }
 
         // This is the Hashunction that will be used to determine which line of hashes.txt it will occupy.
@@ -91,6 +103,7 @@ namespace HashAxe.MD5HashSet
             using(FileStream fs = File.Create("data/hashes.dat")) {
                 hl.FillHashes(fs);
             }
+            hl.WriteHashes();
         }
     }
 }
