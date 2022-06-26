@@ -14,17 +14,20 @@ namespace HashAxe.MD5HashSet
         private readonly int NUM_HASHES;
         private readonly int HASHLIST_LENGTH;
         private readonly int NUM_HEXADECIMAL;
+        private Stream stream;
 
-        public MD5HashSet(int NUM_HASHES) {
+        public MD5HashSet(int NUM_HASHES, Stream stream) {
+            this.stream = stream;
             this.NUM_HASHES = NUM_HASHES;
             this.HASHLIST_LENGTH = MD5HashSet.NextPrime(this.NUM_HASHES * 2 + 1);
-            Console.Write("This is the HASHLIST_LENGTH: " + this.HASHLIST_LENGTH);
+            Console.WriteLine("This is the HASHLIST_LENGTH: " + this.HASHLIST_LENGTH);
 
             int i = 0;
             while(HASHLIST_LENGTH > Math.Pow(16, i)) {
                 i++;
             }
             this.NUM_HEXADECIMAL = i;
+            Console.WriteLine("NUM_HEXADECIMAL: " + this.NUM_HEXADECIMAL);
         }
 
         private static int NextPrime(int number) {
@@ -45,29 +48,42 @@ namespace HashAxe.MD5HashSet
             }
         }
 
-        public void FillHashes(FileStream fs) {
-            fs.Write(new byte[HASHLIST_LENGTH * 32], 0, HASHLIST_LENGTH * 32);
+        public void FillHashes() {
+            for(int i=0; i < 32; i++) {
+                byte[] buffer = new byte[HASHLIST_LENGTH];
+                stream.Write(buffer, 0, buffer.Length);
+            }
+            stream.Position = 0;
+            Console.WriteLine("Filled hashes.dat with empty hashes.");
         }
 
-        public void UploadHash(FileStream fs, string md5) {
+        public void UploadHash(string md5) {
             int hash = this.HashMD5(md5);
             byte[] buffer = new byte[32];
             int inc = 0;
 
             do {
-                fs.Read(buffer, (hash + inc * inc) % HASHLIST_LENGTH, buffer.Length);
+                int pos = (hash + inc * inc) % HASHLIST_LENGTH;
+
+                stream.Seek(pos * 32L, SeekOrigin.Begin);
+                stream.Read(buffer, 0, buffer.Length);
                 inc++;
             } while(buffer[0] != 0);
-            fs.Write(Encoding.ASCII.GetBytes(md5));
+
+            stream.Position -= 32;
+            stream.Write(Encoding.ASCII.GetBytes(md5), 0, buffer.Length);
         }
 
-        public bool Contains(FileStream fs, string md5) {
+        public bool Contains(string md5) {
             byte[] hashAscii = Encoding.ASCII.GetBytes(md5);
             byte[] buffer = new byte[32];
             int hash = this.HashMD5(md5);
             int inc = 0;
             while(true) {
-                fs.Read(buffer, hash + inc * inc, buffer.Length);
+                int pos = (hash + inc * inc) % HASHLIST_LENGTH;
+
+                stream.Seek(pos * 32L, SeekOrigin.Begin);
+                stream.Read(buffer, 0, buffer.Length);
                 if(buffer[0] == 0) {
                     return false;
                 }
@@ -78,17 +94,8 @@ namespace HashAxe.MD5HashSet
             }
         }
 
-        public void WriteHashes() {
-            byte[] buffer = new byte[32 * HASHLIST_LENGTH];
-            using(FileStream fs = File.Create("data/hashes.dat")) {
-                fs.Read(buffer, 0, buffer.Length);
-                Console.Write(Encoding.ASCII.GetString(buffer));
-            }
-        }
-
-        // This is the Hashunction that will be used to determine which line of hashes.txt it will occupy.
-        public int HashMD5(string md5)
-        {
+        // This is the Hash function that will be used to determine which line of hashes.txt it will occupy.
+        private int HashMD5(string md5) {
             return Convert.ToInt32(md5.Substring(0, NUM_HEXADECIMAL), 16) % HASHLIST_LENGTH;
         }
 
@@ -99,11 +106,22 @@ namespace HashAxe.MD5HashSet
         public static void Main(string[] args) {
             Console.WriteLine("Program Started.");
 
-            MD5HashSet hl = new MD5HashSet(20);
-            using(FileStream fs = File.Create("data/hashes.dat")) {
-                hl.FillHashes(fs);
+            using(FileStream stream = File.Create("data/hashes.dat")) {
+                MD5HashSet hl = new MD5HashSet(40000000, stream);
+                hl.FillHashes();
+
+                string myHash = "2d75cc1bf8e57872781f9cd04a529256";
+                string myHash1 = "2d75cc1bf8e57872781f9cd04a529258";
+
+                hl.UploadHash(myHash);
+                hl.UploadHash(myHash1);
+
+                Console.WriteLine(hl.Contains(myHash));
+                Console.WriteLine(hl.Contains(myHash1));
+                Console.WriteLine(hl.Contains("2d75cc1bf8e57872781f9cd04a52925f"));
+                Console.WriteLine(hl.Contains("00f538c3d410822e241486ca061a57ee"));
             }
-            hl.WriteHashes();
+            Console.WriteLine("The program has Terminated");
         }
     }
 }
