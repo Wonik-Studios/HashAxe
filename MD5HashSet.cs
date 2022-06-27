@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HashAxe.MD5HashSet
 {
-    class MD5HashSet
+    public class MD5Hash
     {
         // NUM_HASHES: The name speaks for itself. It's the number of hashes that we are getting from virusshare.
         // HASHLIST_LENGTH: The number of nodes we have that can contain md5 hashes.
@@ -13,10 +13,10 @@ namespace HashAxe.MD5HashSet
         private readonly int NUM_HEXADECIMAL;
         private Stream stream;
 
-        public MD5HashSet(int NUM_HASHES, Stream stream) {
+        public MD5Hash(int NUM_HASHES, Stream stream) {
             this.stream = stream;
             this.NUM_HASHES = NUM_HASHES;
-            this.HASHLIST_LENGTH = MD5HashSet.NextPrime(this.NUM_HASHES * 2 + 1);
+            this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 2 + 1);
             Console.WriteLine("This is the HASHLIST_LENGTH: " + this.HASHLIST_LENGTH);
 
             int i = 0;
