@@ -102,12 +102,12 @@ namespace HashAxe.MD5HashSet
         public int GetHashListLength() {
             return HASHLIST_LENGTH;
         }
-
+/*
         public static void Main(string[] args) {
             Console.WriteLine("Program Started.");
 
             using(FileStream stream = File.Create("data/hashes.dat")) {
-                MD5HashSet hl = new MD5HashSet(40000000, stream);
+                MD5HashSet hl = new MD5HashSet(10^4, stream);
                 hl.FillHashes();
 
                 string myHash = "2d75cc1bf8e57872781f9cd04a529256";
@@ -123,5 +123,6 @@ namespace HashAxe.MD5HashSet
             }
             Console.WriteLine("The program has Terminated");
         }
+*/
     }
 }
