@@ -84,7 +84,7 @@ namespace HashAxe.MD5HashSet
                 if(buffer[0] == 0) {
                     return false;
                 }
-                else if(Enumerable.SequenceEqual<Byte>(buffer, hashAscii)) {
+                else if(Enumerable.SequenceEqual<byte>(buffer, hashAscii)) {
                     return true;
                 }
                 inc++;
