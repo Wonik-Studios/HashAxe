@@ -9,29 +9,18 @@ namespace HashAxe
     {
 		static async Task Main(string[] args)
 		{
-			Argument<string> password = new Argument<string>(
-				name: "password",
-				description: "Password used to validate your status as an administrator");
-			RootCommand rCommand = new RootCommand("C# client to assist with retrieving Wonik API keys.");
-			rCommand.Add(password);
-			rCommand.SetHandler(async (password) =>
+			Command getHashes = new Command("get-hashes", "Download the latest set of hashes.");
+			RootCommand rCommand = new RootCommand("\"HashAxe\" -- Nathan");
+			rCommand.Add(getHashes);
+			getHashes.SetHandler(async () =>
 			{
-				await Command(password);
-			},
-			password);
+				await GetHashes();
+			});
 			await rCommand.InvokeAsync(args);
 		}
-        internal static async Task Command(string testArgument)
+        internal static async Task GetHashes()
         {
-            Console.WriteLine(@"
-            
-██╗░░██╗░█████╗░░██████╗██╗░░██╗░█████╗░██╗░░██╗███████╗
-██║░░██║██╔══██╗██╔════╝██║░░██║██╔══██╗╚██╗██╔╝██╔════╝
-███████║███████║╚█████╗░███████║███████║░╚███╔╝░█████╗░░
-██╔══██║██╔══██║░╚═══██╗██╔══██║██╔══██║░██╔██╗░██╔══╝░░
-██║░░██║██║░░██║██████╔╝██║░░██║██║░░██║██╔╝╚██╗███████╗
-╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚══════╝
-            ");
+            return;
         }
     }
 }
