@@ -1,4 +1,6 @@
 using System.CommandLine;
+using System.Reflection;
+using ModifiedOutput;
 
 #pragma warning disable CS8600
 #pragma warning disable CS8604
@@ -41,14 +43,7 @@ namespace HashAxe
 
         internal static string root()
         {
-            Console.WriteLine(@"
-██╗░░██╗░█████╗░░██████╗██╗░░██╗░█████╗░██╗░░██╗███████╗
-██║░░██║██╔══██╗██╔════╝██║░░██║██╔══██╗╚██╗██╔╝██╔════╝
-███████║███████║╚█████╗░███████║███████║░╚███╔╝░█████╗░░
-██╔══██║██╔══██║░╚═══██╗██╔══██║██╔══██║░██╔██╗░██╔══╝░░
-██║░░██║██║░░██║██████╔╝██║░░██║██║░░██║██╔╝╚██╗███████╗
-╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚══════╝");
-			Console.WriteLine("HasAxe {version} by Wonik");
+            LineOutput.WriteLineColor("HashAxe {0}", ConsoleColor.DarkMagenta, Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             return "I like to move it move it";
         }
         internal static async Task Cmd_GetHashes(string hashaxe_root)
