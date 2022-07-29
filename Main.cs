@@ -69,6 +69,12 @@ namespace HashAxe
                 await Cmd_EnableHashset(launchPath);
             });
 
+            traverse.SetHandler(async () =>
+            {
+                string launchPath = root();
+                await Cmd_Traverse(launchPath);
+            });
+
             await rCommand.InvokeAsync(args);
         }
         internal static string root()
@@ -110,7 +116,7 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Traverse(string hashaxe_root)
+        internal static async Task Cmd_Traverse(string hashaxe_root)
         {
             // there's stiltraverserl an error meep
             Traverser traverser;
