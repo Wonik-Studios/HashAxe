@@ -17,7 +17,7 @@ namespace HashAxe
         {
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
-            Command downloadHashet = new Command("hashset-get", "Install a hashset from a haslist url");
+            Command downloadHashet = new Command("hashset-get", "Install a hashset from a hashlist url");
             Command removeHashet = new Command("hashset-remove", "Uninstalls a hashset from the configuration");
             Command disableHashset = new Command("hashet-off", "Disables a hashset so it won't be included in the scan");
             Command enableHashset = new Command("hashet-on", "Enables a previously disabled hashset");
@@ -48,25 +48,25 @@ namespace HashAxe
             downloadHashet.SetHandler(async () =>
             {
                 string launchPath = root();
-                await Cmd_GetHashes(launchPath);
+                await Cmd_DownloadHashset(launchPath);
             });
 
             removeHashet.SetHandler(async () =>
             {
                 string launchPath = root();
-                await Cmd_GetHashes(launchPath);
+                await Cmd_RemoveHashset(launchPath);
             });
 
             disableHashset.SetHandler(async () =>
             {
                 string launchPath = root();
-                await Cmd_GetHashes(launchPath);
+                await Cmd_DisableHashset(launchPath);
             });
 
             enableHashset.SetHandler(async () =>
             {
                 string launchPath = root();
-                await Cmd_GetHashes(launchPath);
+                await Cmd_EnableHashset(launchPath);
             });
 
             await rCommand.InvokeAsync(args);
@@ -86,6 +86,26 @@ namespace HashAxe
 
         internal static async Task Cmd_ListHashes(string hashaxe_root)
         {
+            Console.WriteLine(hashaxe_root);
+            return;
+        }
+
+        internal static async Task Cmd_DownloadHashset(string hashaxe_root){
+            Console.WriteLine(hashaxe_root);
+            return;
+        }
+
+        internal static async Task Cmd_RemoveHashset(string hashaxe_root){
+            Console.WriteLine(hashaxe_root);
+            return;
+        }
+
+        internal static async Task Cmd_DisableHashset(string hashaxe_root){
+            Console.WriteLine(hashaxe_root);
+            return;
+        }
+
+        internal static async Task Cmd_EnableHashset(string hashaxe_root){
             Console.WriteLine(hashaxe_root);
             return;
         }

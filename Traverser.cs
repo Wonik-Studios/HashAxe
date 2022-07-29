@@ -64,7 +64,7 @@ namespace HashAxe.FileTraverser
         public List<String> GetFlagged() {
             return this.flagged;
         }
-
+        /*
         public static void Main(string[] args) {
             Traverser traverser;
             using(FileStream fs = File.Create("data/hashes.dat")) {
@@ -93,5 +93,6 @@ namespace HashAxe.FileTraverser
                 Console.WriteLine(file);
             }
         }
+        */
     }
 }
