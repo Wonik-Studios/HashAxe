@@ -46,7 +46,7 @@ namespace HashAxe.FileTraverser
         }
 
         private void TraverseFile(string file) {
-            string hash = this.GetMD5(file);
+            byte[] hash = this.GetMD5(file);
             if(hashSet.Contains(hash)) {
                 flagged.Add(file);
             }
@@ -54,10 +54,9 @@ namespace HashAxe.FileTraverser
             Console.WriteLine(file + " : " +  hash);
         }
 
-        private string GetMD5(string file) {
+        private byte[] GetMD5(string file) {
             using(FileStream fs = File.OpenRead(file)) {
-                byte[] bitHash = md5.ComputeHash(fs);
-                return BitConverter.ToString(bitHash).Replace("-", "").ToLowerInvariant();
+                return md5.ComputeHash(fs);
             }
         }
 
