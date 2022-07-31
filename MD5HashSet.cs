@@ -54,6 +54,8 @@ namespace HashAxe.MD5HashSet
         }
 
         public void FillHashes() {
+            byte[] size = BitConverter.GetBytes(HASHLIST_LENGTH);
+            
             for(int i=0; i < 16; i++) {
                 byte[] buffer = new byte[HASHLIST_LENGTH];
                 stream.Write(buffer, 0, buffer.Length);
@@ -118,25 +120,25 @@ namespace HashAxe.MD5HashSet
             return bytes;
         }
 
-        public static void Main(string[] args) {
-            Console.WriteLine("Program Started.");
+        // public static void Main(string[] args) {
+        //     Console.WriteLine("Program Started.");
 
-            using(FileStream stream = File.Create("data/hashes.dat")) {
-                MD5Hash hl = new MD5Hash(10^4, stream);
-                hl.FillHashes();
+        //     using(FileStream stream = File.Create("data/virus_share.dat")) {
+        //         MD5Hash hl = new MD5Hash(10^4, stream);
+        //         hl.FillHashes();
 
-                byte[] myHash = StringToByteArray("2d75cc1bf8e57872781f9cd04a529256");
-                byte[] myHash1 = StringToByteArray("2d75cc1bf8e57872781f9cd04a529258");
+        //         byte[] myHash = StringToByteArray("2d75cc1bf8e57872781f9cd04a529256");
+        //         byte[] myHash1 = StringToByteArray("2d75cc1bf8e57872781f9cd04a529258");
 
-                hl.UploadHash(myHash);
-                hl.UploadHash(myHash1);
+        //         hl.UploadHash(myHash);
+        //         hl.UploadHash(myHash1);
 
-                Console.WriteLine(hl.Contains(myHash));
-                Console.WriteLine(hl.Contains(myHash1));
-                Console.WriteLine(hl.Contains(StringToByteArray("2d75cc1bf8e57872781f9cd04a52925f")));
-                Console.WriteLine(hl.Contains(StringToByteArray("00f538c3d410822e241486ca061a57ee")));
-            }
-            Console.WriteLine("The program has Terminated");
-        }
+        //         Console.WriteLine(hl.Contains(myHash));
+        //         Console.WriteLine(hl.Contains(myHash1));
+        //         Console.WriteLine(hl.Contains(StringToByteArray("2d75cc1bf8e57872781f9cd04a52925f")));
+        //         Console.WriteLine(hl.Contains(StringToByteArray("00f538c3d410822e241486ca061a57ee")));
+        //     }
+        //     Console.WriteLine("The program has Terminated");
+        // }
     }
 }

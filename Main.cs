@@ -13,6 +13,9 @@ namespace HashAxe
 {
     class HashAxeMain
     {
+        private static Dictionary<string, int> hashSets = new Dictionary<string, int>();
+        
+        
         static async Task Main(string[] args)
         {
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
@@ -115,31 +118,39 @@ namespace HashAxe
             Console.WriteLine(hashaxe_root);
             return;
         }
+        
+        internal static async Task Cmd_ListHashSets() {
+            Console.WriteLine("---------------------------------------------------------------------------");
+            Console.WriteLine("| Hash Set Name                                     | # of Hashes         |");
+            Console.WriteLine("---------------------------------------------------------------------------");
+            foreach(KeyValuePair<string, int> entry in hashSets) {
+                Console.WriteLine(String.Format("| {0,-50}| {1,-20}|", entry.Key, entry.Value));
+            }
+            Console.WriteLine("---------------------------------------------------------------------------");
+            return;
+        }
 
         internal static async Task Cmd_Traverse(string hashaxe_root)
         {
-            // there's stiltraverserl an error meep
             Traverser traverser;
-            using (FileStream fs = File.Create("data/hashes.dat"))
+            using (FileStream fs = File.OpenRead("data/hashes.dat"))
             {
                 MD5Hash hashSet = new MD5Hash(6, fs);
                 using (MD5 md5 = MD5.Create())
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("This is a list of all the files that have been traversed along with their md5 hashes:");
-                    Console.WriteLine("----------------------------------------------------");
                     traverser = new Traverser("/Users/nathankim/Documents/C#Projects/HashAxe/test", hashSet, md5);
                     traverser.Traverse();
                 }
             }
 
             Console.WriteLine();
-            Console.WriteLine("These are the files that have been flagged:");
+            Console.WriteLine("These are the paths for the " + traverser.GetFlagged().Count + " files that have been flagged:");
             Console.WriteLine("----------------------------------------------------");
             foreach (string file in traverser.GetFlagged())
             {
                 Console.WriteLine(file);
             }
+            return;
         }
     }
 }
