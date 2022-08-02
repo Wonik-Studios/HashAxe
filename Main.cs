@@ -16,11 +16,6 @@ namespace HashAxe
 
         static async Task Main(string[] args)
         {
-            var delayOption = new Option<int>(
-                name: "--delay",
-                description: "An option whose argument is parsed as an int.",
-                isDefault: true
-            });
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command downloadHashet = new Command("hashset-get", "Install a hashset from a hashlist url");
@@ -147,7 +142,7 @@ namespace HashAxe
             }
         }
 
-        private static class Item {
+        private class Item {
             public string name;
             public int NUM_HASHES;
         }
