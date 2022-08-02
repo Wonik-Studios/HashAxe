@@ -13,8 +13,14 @@ namespace HashAxe
 {
     class HashAxeMain
     {
+
         static async Task Main(string[] args)
         {
+            var delayOption = new Option<int>(
+                name: "--delay",
+                description: "An option whose argument is parsed as an int.",
+                isDefault: true
+            });
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command downloadHashet = new Command("hashset-get", "Install a hashset from a hashlist url");
@@ -33,45 +39,40 @@ namespace HashAxe
             rCommand.Add(enableHashset);
             rCommand.Add(traverse);
 
+            string launchPath = root();
+
             checksum.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_Checksum(launchPath);
             });
 
             listHashets.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_ListHashes(launchPath);
             });
 
             downloadHashet.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_DownloadHashset(launchPath);
             });
 
             removeHashet.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_RemoveHashset(launchPath);
             });
 
             disableHashset.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_DisableHashset(launchPath);
             });
 
             enableHashset.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_EnableHashset(launchPath);
             });
 
             traverse.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_Traverse(launchPath);
             });
 
@@ -96,22 +97,26 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_DownloadHashset(string hashaxe_root){
+        internal static async Task Cmd_DownloadHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_RemoveHashset(string hashaxe_root){
+        internal static async Task Cmd_RemoveHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_DisableHashset(string hashaxe_root){
+        internal static async Task Cmd_DisableHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_EnableHashset(string hashaxe_root){
+        internal static async Task Cmd_EnableHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
@@ -120,7 +125,7 @@ namespace HashAxe
         {
             // there's stiltraverserl an error meep
             Traverser traverser;
-            using (FileStream fs = File.Create("data/hashes.dat"))
+            using (FileStream fs = File.OpenRead(Path.Combine(hashaxe_root, "hashsets", "ashdahsdhasd")))
             {
                 MD5Hash hashSet = new MD5Hash(6, fs);
                 using (MD5 md5 = MD5.Create())
@@ -140,6 +145,15 @@ namespace HashAxe
             {
                 Console.WriteLine(file);
             }
+        }
+
+        private static class Item {
+            public string name;
+            public int NUM_HASHES;
+        }
+
+        private static Dictionary<string, Item> initialize() {
+
         }
     }
 }
