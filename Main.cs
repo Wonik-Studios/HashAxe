@@ -37,45 +37,40 @@ namespace HashAxe
             rCommand.Add(enableHashset);
             rCommand.Add(traverse);
 
+            string launchPath = root();
+
             checksum.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_Checksum(launchPath);
             });
 
             listHashets.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_ListHashes(launchPath);
             });
 
             downloadHashet.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_DownloadHashset(launchPath);
             });
 
             removeHashet.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_RemoveHashset(launchPath);
             });
 
             disableHashset.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_DisableHashset(launchPath);
             });
 
             enableHashset.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_EnableHashset(launchPath);
             });
 
             traverse.SetHandler(async () =>
             {
-                string launchPath = root();
                 await Cmd_Traverse(launchPath);
             });
 
@@ -100,22 +95,26 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_DownloadHashset(string hashaxe_root){
+        internal static async Task Cmd_DownloadHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_RemoveHashset(string hashaxe_root){
+        internal static async Task Cmd_RemoveHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_DisableHashset(string hashaxe_root){
+        internal static async Task Cmd_DisableHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
 
-        internal static async Task Cmd_EnableHashset(string hashaxe_root){
+        internal static async Task Cmd_EnableHashset(string hashaxe_root)
+        {
             Console.WriteLine(hashaxe_root);
             return;
         }
@@ -134,7 +133,11 @@ namespace HashAxe
         internal static async Task Cmd_Traverse(string hashaxe_root)
         {
             Traverser traverser;
+<<<<<<< HEAD
             using (FileStream fs = File.OpenRead("data/hashes.dat"))
+=======
+            using (FileStream fs = File.OpenRead(Path.Combine(hashaxe_root, "hashsets", "ashdahsdhasd")))
+>>>>>>> 0ba97b7bcbf38674f1b7491bcd54cef66169f892
             {
                 MD5Hash hashSet = new MD5Hash(6, fs);
                 using (MD5 md5 = MD5.Create())
@@ -152,6 +155,15 @@ namespace HashAxe
                 Console.WriteLine(file);
             }
             return;
+        }
+
+        private class Item {
+            public string name;
+            public int NUM_HASHES;
+        }
+
+        private static Dictionary<string, Item> initialize() {
+
         }
     }
 }

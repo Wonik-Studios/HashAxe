@@ -123,7 +123,11 @@ namespace HashAxe.MD5HashSet
         // public static void Main(string[] args) {
         //     Console.WriteLine("Program Started.");
 
+<<<<<<< HEAD
         //     using(FileStream stream = File.Create("data/virus_share.dat")) {
+=======
+        //     using(FileStream stream = File.Create("data/hashes.dat")) {
+>>>>>>> 0ba97b7bcbf38674f1b7491bcd54cef66169f892
         //         MD5Hash hl = new MD5Hash(10^4, stream);
         //         hl.FillHashes();
 
