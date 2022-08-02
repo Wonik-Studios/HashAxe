@@ -9,21 +9,30 @@ namespace HashAxe.LoadHash {
         private Dictionary<string, HashList> hashLists;
         
         public Downloader(string hashaxeRoot) {
-            this.hashLists = this.LoadJson();
             this.hashaxeRoot = hashaxeRoot;
+            this.hashLists = this.LoadJson();
         }
         
         public Dictionary<string, HashList> LoadJson() {
-            using (StreamReader r = new StreamReader(Path.Combine(this.hashaxeRoot, jsonLink)))
+            string path = Path.Combine(this.hashaxeRoot, jsonLink);
+
+            if (!File.Exists(path))
+            {
+                FileStream newFile = File.Create(path);
+                newFile.Close();
+            }
+
+            using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();
                 List<HashList> hashLists = JsonConvert.DeserializeObject<List<HashList>>(json);
-                
+
                 Dictionary<string, HashList> hashDict = new Dictionary<string, HashList>();
-                foreach(HashList hashList in hashLists) {
+                foreach (HashList hashList in hashLists)
+                {
                     hashDict.Add(hashList.name, hashList);
                 }
-                
+
                 return hashDict;
             }
         }
@@ -39,7 +48,6 @@ namespace HashAxe.LoadHash {
             public string hashlist_source;
             public string hashlist_integrity;
             public string hashset_source;
-            public List<string> urls;
         }
     }
 }
