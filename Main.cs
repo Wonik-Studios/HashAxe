@@ -3,6 +3,7 @@ using System.Reflection;
 using ModifiedOutput;
 using HashAxe.FileTraverser;
 using HashAxe.MD5HashSet;
+using HashAxe.LoadHash;
 using System.Security.Cryptography;
 
 
@@ -12,12 +13,12 @@ using System.Security.Cryptography;
 namespace HashAxe
 {
     class HashAxeMain
-    {
-        private static Dictionary<string, int> hashSets = new Dictionary<string, int>();
-        
-        
+    {   
         static async Task Main(string[] args)
         {
+            Downloader loadHash = new Downloader("link.json");
+            
+            
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command downloadHashet = new Command("hashset-get", "Install a hashset from a hashlist url");
@@ -121,7 +122,7 @@ namespace HashAxe
         
         internal static async Task Cmd_ListHashSets() {
             Console.WriteLine("---------------------------------------------------------------------------");
-            Console.WriteLine("| Hash Set Name                                     | # of Hashes         |");
+            Console.WriteLine("| Hash Set Name                                                           |");
             Console.WriteLine("---------------------------------------------------------------------------");
             foreach(KeyValuePair<string, int> entry in hashSets) {
                 Console.WriteLine(String.Format("| {0,-50}| {1,-20}|", entry.Key, entry.Value));
