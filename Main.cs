@@ -26,16 +26,22 @@ namespace HashAxe
             RootCommand rCommand = new RootCommand("This is the root command for HashAxe made by Wonik. If you are seeing this, that means HashAxe is installed properly.");
 
             // downloadHashset arguments
-            Argument<String> hashlistUrlArg = new Argument<String>("Hashlist Source", "Http link to the source file of the hashlist");
-            Option<String> integrityArg = new Option<string>("--integrity", "Optional parameter that ensures the content of the downloaded file. SHA256");
-            Option<String> customNameArg = new Option<string>("--setname", "Optional parameter which disregards name listed in hashlist and allows you to supply your own name for the HashSet");
+            Argument<string> hashlistUrlArg = new Argument<string>("Hashlist Source", "Http link to the source file of the hashlist");
+            Option<string> integrityArg = new Option<string>("--integrity", "Optional parameter that ensures the content of the downloaded file. SHA256");
+            Option<string> customNameArg = new Option<string>("--setname", "Optional parameter which disregards name listed in hashlist and allows you to supply your own name for the HashSet");
 
             downloadHashset.Add(hashlistUrlArg);
             downloadHashset.Add(integrityArg);
             downloadHashset.Add(customNameArg);
             
-            Argument<String> searchPathArg = new Argument<String>("search-path", "The Directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
+            Argument<string> searchPathArg = new Argument<string>("search-path", "The directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
             traverse.Add(searchPathArg);
+            
+            Argument<string> nameEnableArg = new Argument<string>("hashlist-name", "The name of the hashlist that will be enabled.");
+            enableHashset.Add(nameEnableArg);
+            
+            Argument<string> nameDisableArg = new Argument<string>("hashlist-name", "The name of the hashlist that will be disabled.");
+            disableHashset.Add(nameDisableArg);
 
             rCommand.Add(checksum);
             rCommand.Add(listHashets);
@@ -69,15 +75,15 @@ namespace HashAxe
                 await Cmd_RemoveHashset(launchPath);
             });
 
-            disableHashset.SetHandler(async () =>
+            disableHashset.SetHandler(async (string name) =>
             {
-                await Cmd_DisableHashset(launchPath);
-            });
+                await Cmd_DisableHashset(name);
+            }, nameEnableArg);
 
-            enableHashset.SetHandler(async () =>
+            enableHashset.SetHandler(async (string name) =>
             {
-                await Cmd_EnableHashset(launchPath);
-            });
+                await Cmd_EnableHashset(name);
+            }, nameDisableArg);
 
             traverse.SetHandler(async (string searchPath) =>
             {
@@ -136,15 +142,17 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_DisableHashset(string hashaxe_root)
+        internal static async Task Cmd_DisableHashset(string name)
         {
-            Console.WriteLine(hashaxe_root);
+            Downloader.HashList toDisable = hashLists[name];
+            toDisable.enabled = false;
             return;
         }
 
-        internal static async Task Cmd_EnableHashset(string hashaxe_root)
+        internal static async Task Cmd_EnableHashset(string name)
         {
-            Console.WriteLine(hashaxe_root);
+            Downloader.HashList toEnable = hashLists[name];
+            toEnable.enabled = true;
             return;
         }
 

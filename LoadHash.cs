@@ -28,6 +28,10 @@ namespace HashAxe.LoadHash {
                 List<HashList> hashLists = JsonConvert.DeserializeObject<List<HashList>>(json);
 
                 Dictionary<string, HashList> hashDict = new Dictionary<string, HashList>();
+                if(hashLists == null) {
+                    return hashDict;
+                }
+                
                 foreach (HashList hashList in hashLists)
                 {
                     hashDict.Add(hashList.name, hashList);
