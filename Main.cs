@@ -33,6 +33,9 @@ namespace HashAxe
             downloadHashset.Add(hashlistUrlArg);
             downloadHashset.Add(integrityArg);
             downloadHashset.Add(customNameArg);
+            
+            Argument<String> searchPathArg = new Argument<String>("search-path", "The Directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
+            traverse.Add(searchPathArg);
 
             rCommand.Add(checksum);
             rCommand.Add(listHashets);
@@ -76,10 +79,10 @@ namespace HashAxe
                 await Cmd_EnableHashset(launchPath);
             });
 
-            traverse.SetHandler(async () =>
+            traverse.SetHandler(async (string searchPath) =>
             {
-                await Cmd_Traverse(launchPath);
-            });
+                await Cmd_Traverse(launchPath, searchPath);
+            }, searchPathArg);
 
             await rCommand.InvokeAsync(args);
         }
@@ -160,10 +163,10 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_Traverse(string hashaxe_root)
+        internal static async Task Cmd_Traverse(string hashaxe_root, string searchPath)
         {
             Traverser traverser;
-            List<string> flagged = new List<string>();
+            HashSet<string> flagged = new HashSet<string>();
             
             foreach(Downloader.HashList hashList in hashLists.Values) {
                 if(hashList.enabled) {
@@ -173,10 +176,11 @@ namespace HashAxe
                             MD5Hash hashSet = new MD5Hash(hashList.NUM_HASHES, fs);
                             using (MD5 md5 = MD5.Create())
                             {
-                                traverser = new Traverser("/Users/nathankim/Documents/C#Projects/HashAxe/test", hashSet, md5);
+                                traverser = new Traverser(searchPath, hashSet, md5);
                                 traverser.Traverse();
                             }
                         }
+                        flagged.UnionWith(traverser.GetFlagged());
                     } catch(Exception e) {
                         Console.WriteLine("An Error has stopped the hashList {0} from being properly checked against the files.");
                     }
