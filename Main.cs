@@ -16,9 +16,6 @@ namespace HashAxe
     {   
         static async Task Main(string[] args)
         {
-            Downloader loadHash = new Downloader("link.json");
-            
-            
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command downloadHashet = new Command("hashset-get", "Install a hashset from a hashlist url");
@@ -38,6 +35,9 @@ namespace HashAxe
             rCommand.Add(traverse);
 
             string launchPath = root();
+            Downloader downloader = new Downloader(launchPath);
+            Dictionary<string, Downloader.HashList> hashlists = downloader.LoadJson();
+            Console.WriteLine(hashlists);
 
             checksum.SetHandler(async () =>
             {
@@ -76,11 +76,34 @@ namespace HashAxe
 
             await rCommand.InvokeAsync(args);
         }
+        
         internal static string root()
         {
+            string hashaxe_root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
+            string hashsets_root = Path.Combine(hashaxe_root, "hashsets");
+
             LineOutput.WriteLineColor("HashAxe {0}", ConsoleColor.Green, Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             LineOutput.WriteLineColor("Brought to you by the lovely members of Wonik", ConsoleColor.Green);
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
+            
+            try{
+                throw new Exception("I love dick");
+                if (!Directory.Exists(hashaxe_root))
+                {
+                    Directory.CreateDirectory(hashaxe_root);
+                    Console.WriteLine("Initalized HashAxe configuration directory at {0}", hashaxe_root);
+                }
+
+                if (!Directory.Exists(hashsets_root))
+                {
+                    Directory.CreateDirectory(hashsets_root);
+                    Console.WriteLine("Initalized HashSets store directory at {0}", hashsets_root);
+                }
+            }
+            catch(Exception e){
+                LineOutput.WriteLineColor("\ni love dick", ConsoleColor.Red);
+            }
+
+            return hashaxe_root;
         }
 
         internal static async Task Cmd_Checksum(string hashaxe_root)
@@ -119,25 +142,22 @@ namespace HashAxe
             return;
         }
         
-        internal static async Task Cmd_ListHashSets() {
-            Console.WriteLine("---------------------------------------------------------------------------");
-            Console.WriteLine("| Hash Set Name                                                           |");
-            Console.WriteLine("---------------------------------------------------------------------------");
-            foreach(KeyValuePair<string, int> entry in hashSets) {
-                Console.WriteLine(String.Format("| {0,-50}| {1,-20}|", entry.Key, entry.Value));
-            }
-            Console.WriteLine("---------------------------------------------------------------------------");
+        internal static async Task Cmd_ListHashSets(string hashaxe_root) {
+            // Console.WriteLine("---------------------------------------------------------------------------");
+            // Console.WriteLine("| Hash Set Name                                                           |");
+            // Console.WriteLine("---------------------------------------------------------------------------");
+            // foreach(KeyValuePair<string, int> entry in hashSets) {
+            //     Console.WriteLine(String.Format("| {0,-50}| {1,-20}|", entry.Key, entry.Value));
+            // }
+            // Console.WriteLine("---------------------------------------------------------------------------");
+            Console.WriteLine(hashaxe_root);
             return;
         }
 
         internal static async Task Cmd_Traverse(string hashaxe_root)
         {
             Traverser traverser;
-<<<<<<< HEAD
-            using (FileStream fs = File.OpenRead("data/hashes.dat"))
-=======
             using (FileStream fs = File.OpenRead(Path.Combine(hashaxe_root, "hashsets", "ashdahsdhasd")))
->>>>>>> 0ba97b7bcbf38674f1b7491bcd54cef66169f892
             {
                 MD5Hash hashSet = new MD5Hash(6, fs);
                 using (MD5 md5 = MD5.Create())
@@ -160,10 +180,6 @@ namespace HashAxe
         private class Item {
             public string name;
             public int NUM_HASHES;
-        }
-
-        private static Dictionary<string, Item> initialize() {
-
         }
     }
 }

@@ -4,16 +4,17 @@ using Newtonsoft.Json;
 namespace HashAxe.LoadHash {
     // This class will be responsible for loading in all of the hashes from https://virusshare.com/hashes
     class Downloader {
-        private string jsonLink;
+        private const string jsonLink = "hashmap.json";
+        private string hashaxeRoot;
         private Dictionary<string, HashList> hashLists;
         
-        public Downloader(string jsonLink) {
-            this.jsonLink = jsonLink;
-            this.hashLists = LoadJson(this.jsonLink);
+        public Downloader(string hashaxeRoot) {
+            this.hashLists = this.LoadJson();
+            this.hashaxeRoot = hashaxeRoot;
         }
         
-        public static Dictionary<string, HashList> LoadJson(string jsonLink) {
-            using (StreamReader r = new StreamReader("file.json"))
+        public Dictionary<string, HashList> LoadJson() {
+            using (StreamReader r = new StreamReader(Path.Combine(this.hashaxeRoot, jsonLink)))
             {
                 string json = r.ReadToEnd();
                 List<HashList> hashLists = JsonConvert.DeserializeObject<List<HashList>>(json);
@@ -27,14 +28,6 @@ namespace HashAxe.LoadHash {
             }
         }
         
-        public string GetJsonLink() {
-            return this.jsonLink;
-        }
-        
-        public void SetJsonLink(string jsonLink) {
-            this.jsonLink = jsonLink;
-        }
-        
         public Dictionary<string, HashList> GetHashLists() {
             return hashLists;
         }
@@ -43,8 +36,9 @@ namespace HashAxe.LoadHash {
             public string name;
             public int NUM_HASHES;
             public bool enabled;
-            public string integrity;
-            
+            public string hashlist_source;
+            public string hashlist_integrity;
+            public string hashset_source;
             public List<string> urls;
         }
     }
