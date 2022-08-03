@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json;
 
 
 namespace HashAxe.LoadHash {
@@ -25,8 +25,10 @@ namespace HashAxe.LoadHash {
             using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();
-                List<HashList> hashLists = JsonConvert.DeserializeObject<List<HashList>>(json);
-
+                List<HashList>? hashLists = JsonSerializer.Deserialize<List<HashList>>(
+                    json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+                
                 Dictionary<string, HashList> hashDict = new Dictionary<string, HashList>();
                 if(hashLists == null) {
                     return hashDict;
@@ -41,17 +43,24 @@ namespace HashAxe.LoadHash {
             }
         }
         
+        public void UploadJson(List<HashList> hashLists) {
+            string path = Path.Combine(this.hashaxeRoot, jsonLink);
+            
+            string json = JsonSerializer.Serialize(hashLists);
+            File.WriteAllText(path, json);
+        }
+        
         public Dictionary<string, HashList> GetHashLists() {
             return hashLists;
         }
         
         public class HashList {
-            public string name;
-            public int NUM_HASHES;
-            public bool enabled;
-            public string hashlist_source;
-            public string hashlist_integrity;
-            public string hashset_source;
+            public string name {get; set;}
+            public int NUM_HASHES {get; set;}
+            public bool enabled {get; set;}
+            public string hashlist_source {get; set;}
+            public string hashlist_integrity {get; set;}
+            public string hashset_source {get; set;}
         }
     }
 }
