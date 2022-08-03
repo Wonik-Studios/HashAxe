@@ -1,6 +1,8 @@
 using System.CommandLine;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;  
+
 using ModifiedOutput;
 using HashAxe.FileTraverser;
 using HashAxe.MD5HashSet;
@@ -15,6 +17,7 @@ namespace HashAxe
 
         static async Task Main(string[] args)
         {
+            // Initialize the Commands
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command downloadHashset = new Command("hashset-get", "Install a hashset from a hashlist url");
@@ -23,9 +26,10 @@ namespace HashAxe
             Command enableHashset = new Command("hashet-on", "Enables a previously disabled hashset");
             Command traverse = new Command("traverse", "Scans the speficied path");
 
+            // The root command.
             RootCommand rCommand = new RootCommand("This is the root command for HashAxe made by Wonik. If you are seeing this, that means HashAxe is installed properly.");
 
-            // downloadHashset arguments
+            // Set the arguments for the commands.
             Argument<string> hashlistUrlArg = new Argument<string>("Hashlist Source", "Http link to the source file of the hashlist");
             Option<string> integrityArg = new Option<string>("--integrity", "Optional parameter that ensures the content of the downloaded file. SHA256");
             Option<string> customNameArg = new Option<string>("--setname", "Optional parameter which disregards name listed in hashlist and allows you to supply your own name for the HashSet");
@@ -42,6 +46,9 @@ namespace HashAxe
             
             Argument<string> nameDisableArg = new Argument<string>("hashlist-name", "The name of the hashlist that will be disabled.");
             disableHashset.Add(nameDisableArg);
+            
+            Argument<string> nameRemoveArg = new Argument<string>("hashlist-name", "The name of the hashlist to be removed.");
+            removeHashet.Add(nameRemoveArg);
 
             rCommand.Add(checksum);
             rCommand.Add(listHashets);
@@ -51,6 +58,7 @@ namespace HashAxe
             rCommand.Add(enableHashset);
             rCommand.Add(traverse);
 
+            // Initialize the hashaxe_root directory as "launchPath", the hashLists which will be responsible for holding data about the hashsets and the downloader.
             string launchPath = root();
             Downloader downloader = new Downloader(launchPath);
             hashLists = downloader.GetHashLists();
@@ -70,10 +78,10 @@ namespace HashAxe
                 await Cmd_DownloadHashset(launchPath, hashlist_url, integrity, customName);
             }, hashlistUrlArg, integrityArg, customNameArg);
 
-            removeHashet.SetHandler(async () =>
+            removeHashet.SetHandler(async (string name) =>
             {
-                await Cmd_RemoveHashset(launchPath);
-            });
+                await Cmd_RemoveHashset(launchPath, name);
+            }, nameRemoveArg);
 
             disableHashset.SetHandler(async (string name) =>
             {
@@ -136,9 +144,27 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_RemoveHashset(string hashaxe_root)
+        internal static async Task Cmd_RemoveHashset(string hashaxe_root, string name)
         {
-            Console.WriteLine(hashaxe_root);
+            Regex regex = new Regex(@"(?i)y(es)?");
+            Console.Write("Are you sure that you want to delete the hash set {0}? [Y/n]: ", name);
+            string response = Console.ReadLine();
+            
+            if(!regex.IsMatch(response)) {
+                Console.WriteLine("Exiting out of Command...");
+                return;
+            }
+            
+            Downloader.HashList toRemove = hashLists[name];
+            if(toRemove == null) {
+                Console.WriteLine("The hash set under the name {0} does not exist.", name);
+            } else {
+                string path = Path.Combine(hashaxe_root, "hashsets", toRemove.hashset_source);
+                File.Delete(path);
+                
+                hashLists.Remove(name);
+                Console.WriteLine("The hash set {0} has successfully been removed.");
+            }
             return;
         }
 
