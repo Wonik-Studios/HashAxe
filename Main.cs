@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 
 using HashAxe.Crypto;
 using HashAxe.ModifiedOutput;
@@ -17,6 +18,7 @@ namespace HashAxe
         static readonly HttpClient client = new HttpClient();
         private static Dictionary<string, Downloader.HashList> hashLists;
         private static Downloader downloader;
+        private static string launchPath;
 
         static async Task Main(string[] args)
         {
@@ -27,6 +29,7 @@ namespace HashAxe
             Command removeHashet = new Command("hashset-remove", "Uninstalls a hashset from the configuration");
             Command disableHashset = new Command("hashset-off", "Disables a hashset so it won't be included in the scan");
             Command enableHashset = new Command("hashset-on", "Enables a previously disabled hashset");
+            Command renameHashset = new Command("rename", "Renames a designated hashset");
             Command traverse = new Command("traverse", "Scans the speficied path");
 
             // The root command.
@@ -44,15 +47,20 @@ namespace HashAxe
             Argument<string> searchPathArg = new Argument<string>("search-path", "The directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
             traverse.Add(searchPathArg);
             
-            Argument<string> nameEnableArg = new Argument<string>("hashlist-name", "The name of the hashlist that will be enabled.");
+            Argument<string> nameEnableArg = new Argument<string>("hashset-name", "The name of the hashlist that will be enabled.");
             enableHashset.Add(nameEnableArg);
             
-            Argument<string> nameDisableArg = new Argument<string>("hashlist-name", "The name of the hashlist that will be disabled.");
+            Argument<string> nameDisableArg = new Argument<string>("hashset-name", "The name of the hashlist that will be disabled.");
             disableHashset.Add(nameDisableArg);
             
-            Argument<string> nameRemoveArg = new Argument<string>("hashlist-name", "The name of the hashlist to be removed.");
+            Argument<string> nameRemoveArg = new Argument<string>("hashset-name", "The name of the hashlist to be removed.");
             removeHashet.Add(nameRemoveArg);
-
+            
+            Argument<string> oldNameArg = new Argument<string>("old-name", "The name of the hashset that will be renamed.");
+            Argument<string> newNameArg = new Argument<string>("new-name", "The name that the old hashset will be renamed to.");
+            renameHashset.Add(oldNameArg);
+            renameHashset.Add(newNameArg);
+            
             rCommand.Add(checksum);
             rCommand.Add(listHashets);
             rCommand.Add(downloadHashset);
@@ -60,30 +68,31 @@ namespace HashAxe
             rCommand.Add(disableHashset);
             rCommand.Add(enableHashset);
             rCommand.Add(traverse);
+            rCommand.Add(renameHashset);
 
-            // Initialize the hashaxe_root directory as "launchPath", the hashLists which will be responsible for holding data about the hashsets and the downloader.
-            string launchPath = root();
+            // Initialize the launchPath directory as "launchPath", the hashLists which will be responsible for holding data about the hashsets and the downloader.
+            root();
             downloader = new Downloader(launchPath);
             hashLists = downloader.GetHashLists();
 
             checksum.SetHandler(async () =>
             {
-                await Cmd_Checksum(launchPath);
+                await Cmd_Checksum();
             });
 
             listHashets.SetHandler(async () =>
             {
-                await Cmd_ListHashSets(launchPath);
+                await Cmd_ListHashSets();
             });
 
             downloadHashset.SetHandler(async (string hashlist_url, string? integrity, string? customName) =>
             {
-                await Cmd_DownloadHashset(launchPath, hashlist_url, integrity, customName);
+                await Cmd_DownloadHashset(hashlist_url, integrity, customName);
             }, hashlistUrlArg, integrityArg, customNameArg);
 
             removeHashet.SetHandler(async (string name) =>
             {
-                await Cmd_RemoveHashset(launchPath, name);
+                await Cmd_RemoveHashset(name);
             }, nameRemoveArg);
 
             disableHashset.SetHandler(async (string name) =>
@@ -96,29 +105,34 @@ namespace HashAxe
                 Console.WriteLine(name);
                 await Cmd_EnableHashset(name);
             }, nameEnableArg);
+            
+            renameHashset.SetHandler(async (string oldName, string newName) => {
+                await Cmd_RenameHashSet(oldName, newName);
+            }, oldNameArg, newNameArg);
 
             traverse.SetHandler(async (string searchPath) =>
             {
-                await Cmd_Traverse(launchPath, searchPath);
+                await Cmd_Traverse(searchPath);
             }, searchPathArg);
 
             await rCommand.InvokeAsync(args);
         }
 
-        internal static string root()
+        internal static void root()
         {
-            string hashaxe_root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
-            string hashsets_root = Path.Combine(hashaxe_root, "hashsets");
+            launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
+            string hashsets_root = Path.Combine(launchPath, "hashsets");
+            string temp_root = Path.Combine(launchPath, "temp");
 
             LineOutput.WriteLineColor("HashAxe {0}", ConsoleColor.Green, Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             LineOutput.WriteLineColor("Brought to you by the lovely members of Wonik", ConsoleColor.Green);
 
             try
             {
-                if (!Directory.Exists(hashaxe_root))
+                if (!Directory.Exists(launchPath))
                 {
-                    Directory.CreateDirectory(hashaxe_root);
-                    Console.WriteLine("Initalized empty HashAxe configuration directory at {0}", hashaxe_root);
+                    Directory.CreateDirectory(launchPath);
+                    Console.WriteLine("Initalized empty HashAxe configuration directory at {0}", launchPath);
                 }
 
                 if (!Directory.Exists(hashsets_root))
@@ -126,23 +140,27 @@ namespace HashAxe
                     Directory.CreateDirectory(hashsets_root);
                     Console.WriteLine("Initalized empty HashSets store directory at {0}", hashsets_root);
                 }
+
+                if (!Directory.Exists(temp_root))
+                {
+                    Directory.CreateDirectory(temp_root);
+                    Console.WriteLine("Initalized empty Temp directory at {0}", hashsets_root);
+                }
             }
             catch (Exception e)
             {
                 LineOutput.WriteLineColor("\nThe root handler encountered an error, {0}", ConsoleColor.Red, e.Message);
                 Environment.Exit(1);
             }
-
-            return hashaxe_root;
         }
 
-        internal static async Task Cmd_Checksum(string hashaxe_root)
+        internal static async Task Cmd_Checksum()
         {
-            Console.WriteLine(hashaxe_root);
+            Console.WriteLine(launchPath);
             return;
         }
 
-        internal static async Task Cmd_DownloadHashset(string hashaxe_root, string hashlist_url, string? integrity = null, string? customName = null)
+        internal static async Task Cmd_DownloadHashset(string hashlist_url, string? integrity = null, string? customName = null)
         {
             try{
                 if (!hashlist_url.StartsWith("http://") && !hashlist_url.StartsWith("https://")){
@@ -154,20 +172,55 @@ namespace HashAxe
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
                 
+                Item? item =  JsonSerializer.Deserialize<Item>(
+                    responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
                 if (!String.IsNullOrEmpty(responseBody)) {
                     responseBody = responseBody.Substring(0, responseBody.Length - 1);
                 } else {
                     throw new Exception("The hashlist on the URL is empty.");
                 }
                 
+                Console.WriteLine();
+                LineOutput.LogSuccess("Downloaded {0}", hashlist_url);
+                
                 if (!String.IsNullOrEmpty(integrity)){
                     string checksum = Hash.sha256(responseBody);
                     integrity = integrity.Trim();
-                    Console.WriteLine(responseBody);
-                    Console.WriteLine("{0} {1}", checksum, integrity);
+                    Console.WriteLine("\nINCOMING HASH: {0}\nINTEGRITY HASH: {1}", checksum, integrity);
+
+                    if (checksum != integrity){
+                        throw new Exception("The supplied integrity hash does not match the checksum of the downloaded file. The web server might be trying to play you dirty!");
+                    }
+                    else{
+                        Console.WriteLine();
+                        LineOutput.LogSuccess("Checksum pased");
+                    }
                 }
                 else{
-                    LineOutput.WriteLineColor("An integrity hash was not supplied. This is highly reccomended.", ConsoleColor.Yellow);
+                    LineOutput.LogWarning("An integrity hash was not supplied. It is reccomended to use one.");
+                }
+
+                Console.WriteLine("Importing ({0}) URLs..", item?.HashList.Count);
+
+                foreach (HashSource source in item.HashList){
+                    string source_url = source.sourceUrl;
+                    string source_integrity = source.integrity;
+                    Console.WriteLine("Importing.. {0}", source_url);
+
+                    HttpResponseMessage sourceDownload = await client.GetAsync(source_url);
+                    sourceDownload.EnsureSuccessStatusCode();
+                    string rawSource = await sourceDownload.Content.ReadAsStringAsync();
+                    string rawSourceHash = Hash.sha256(rawSource);
+                    
+                    if (rawSourceHash == source_integrity){
+                        Console.WriteLine("Checksum passed");
+                    }
+                    else{
+                        LineOutput.WriteLineColor("Failed checksum. Expecting {0} but received {1}.", ConsoleColor.Red, source_integrity, rawSourceHash);
+                        throw new Exception("Checksum failed");
+                    }
                 }
             }
             catch(Exception e){
@@ -176,32 +229,32 @@ namespace HashAxe
             }
         }
 
-        internal static async Task Cmd_RemoveHashset(string hashaxe_root, string name)
+        internal static async Task Cmd_RemoveHashset(string name)
         {
             Regex regex = new Regex(@"(?i)y(es)?");
             Console.Write("Are you sure that you want to delete the hash set {0}? [Y/n]: ", name);
-            string response = Console.ReadLine();
-            
-            if(!regex.IsMatch(response)) {
+            string?  response = Console.ReadLine();
+    
+            if(String.IsNullOrEmpty(response) || !regex.IsMatch(response)) {
                 Console.WriteLine("Exiting out of Command...");
                 return;
             }
             
             if(hashLists.ContainsKey(name)){
-                Console.WriteLine("The hash set under the name {0} does not exist.", name);
+                LineOutput.LogFailure(String.Format("The hash set under the name {0} does not exist.", name));
             } else {
                 Downloader.HashList toRemove = hashLists[name];
-                string path = Path.Combine(hashaxe_root, "hashsets", toRemove.hashset_source);
+                string path = Path.Combine(launchPath, "hashsets", toRemove.hashset_source);
                 File.Delete(path);
                 
                 hashLists.Remove(name);
                 try {
                     downloader.UploadJson(hashLists.Values.ToList());
-                    Console.WriteLine("The hash set {0} has successfully been removed.", name);
+                    LineOutput.LogSuccess(String.Format("The hash set {0} has been removed.", name));
                     
                 } catch(Exception e) {
-                    Console.WriteLine("There was an unexpected error when attempting to remove the hashset {0}.", name);
-                    Console.WriteLine("Error Message: " + e.Message);
+                    LineOutput.LogFailure(String.Format("There was an unexpected error when attempting to remove the hashset {0}.", name));
+                    LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
                 }
             }
             return;
@@ -213,16 +266,16 @@ namespace HashAxe
                 Downloader.HashList toDisable = hashLists[name];
                 toDisable.enabled = false;
             } else {
-                Console.WriteLine("Failed to find a hash set under the name {0}.", name);
+                LineOutput.LogFailure(String.Format("Failed to find a hash set under the name {0}.", name));
                 return;
             }
             
             try {
                 downloader.UploadJson(hashLists.Values.ToList());
-                Console.WriteLine("HashAxe has successfully disabled the hash set {0}.", name);
+                LineOutput.LogSuccess(String.Format("HashAxe has disabled the hash set {0}.", name));
             } catch(Exception e) {
-                Console.WriteLine("There was an unexpected error when attempting to disable the hashset {0}.", name);
-                Console.WriteLine("Error Message: " + e.Message);
+                LineOutput.LogFailure(String.Format("There was an unexpected error when attempting to disable the hashset {0}.", name));
+                LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
             }
             return;
         }
@@ -234,21 +287,42 @@ namespace HashAxe
                 Downloader.HashList toEnable = hashLists[name];
                 toEnable.enabled = true;
             } else {
-                Console.WriteLine("Failed to find a hash set under the name {0}.", name);
+                LineOutput.LogFailure(String.Format("Failed to find a hash set under the name {0}.", name));
             }
             
             try {
                 downloader.UploadJson(hashLists.Values.ToList());
+                LineOutput.LogSuccess(String.Format("HashAxe has successfully enabled the hash set {0}.", name));
             } catch(Exception e) {
-                Console.WriteLine("There was an unexpected error when attempting to enable the hashset {0}.", name);
-                Console.WriteLine("Error Message: " + e.Message);
+                LineOutput.LogFailure(String.Format("There was an unexpected error when attempting to enable the hashset {0}.", name));
+                LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
+            }
+            return;
+        }
+        
+        internal static async Task Cmd_RenameHashSet(string oldName, string newName) {
+            if(hashLists.ContainsKey(newName)) {
+                LineOutput.LogFailure(String.Format("Exiting Command: There already exists a hash set under the name {0}", newName));
                 return;
             }
-            Console.WriteLine("HashAxe has successfully enabled the hash set {0}.", name);
+            else if(hashLists.ContainsKey(oldName)) {
+                hashLists[oldName].name = newName;
+            } else {
+                LineOutput.LogFailure(String.Format("Exiting Command: No Hashlists under the name {0} found.", oldName));
+                return;
+            }
+            
+            try {
+                downloader.UploadJson(hashLists.Values.ToList());
+                LineOutput.LogSuccess(String.Format("The hash set {0} was renamed to {1}.", oldName, newName));
+            } catch(Exception e) {
+                LineOutput.LogFailure(String.Format("An unexpected error occurred when renaming {0} to {1}.", oldName, newName));
+                LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
+            }
             return;
         }
 
-        internal static async Task Cmd_ListHashSets(string hashaxe_root)
+        internal static async Task Cmd_ListHashSets()
         {
             foreach (Downloader.HashList entry in hashLists.Values)
             {
@@ -263,7 +337,7 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_Traverse(string hashaxe_root, string searchPath)
+        internal static async Task Cmd_Traverse(string searchPath)
         {
             Traverser traverser;
             HashSet<string> flagged = new HashSet<string>();
@@ -271,7 +345,7 @@ namespace HashAxe
             foreach(Downloader.HashList hashList in hashLists.Values) {
                 if(hashList.enabled) {
                     try {
-                        using (FileStream fs = File.OpenRead(Path.Combine(hashaxe_root, "hashsets", hashList.hashset_source)))
+                        using (FileStream fs = File.OpenRead(Path.Combine(launchPath, "hashsets", hashList.hashset_source)))
                         {
                             MD5Hash hashSet = new MD5Hash(hashList.NUM_HASHES, fs);
                             using (MD5 md5 = MD5.Create())
@@ -282,7 +356,7 @@ namespace HashAxe
                         }
                         flagged.UnionWith(traverser.GetFlagged());
                     } catch(Exception e) {
-                        Console.WriteLine("An Error has stopped the hashList {0} from being properly checked against the files.", hashList.name);
+                        LineOutput.LogFailure(String.Format("An Error has stopped the hashList {0} from being properly checked against the files.", hashList.name));
                     }
                 }
                 
@@ -296,6 +370,17 @@ namespace HashAxe
                 Console.WriteLine(file);
             }
             return;
+        }
+        
+        private class Item {
+            public string? name {get; set;}
+            public string? compiledIntegrity {get; set;}
+            public List<HashSource>? HashList {get; set;}
+        }
+        
+        private class HashSource {
+            public string? sourceUrl {get; set;}
+            public string? integrity {get; set;}
         }
     }
 }
