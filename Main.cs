@@ -3,13 +3,13 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Text;
 
 using HashAxe.Crypto;
 using HashAxe.ModifiedOutput;
 using HashAxe.FileTraverser;
 using HashAxe.MD5HashSet;
 using HashAxe.LoadHash;
-
 
 namespace HashAxe
 {
@@ -30,7 +30,7 @@ namespace HashAxe
             Command disableHashset = new Command("hashset-off", "Disables a hashset so it won't be included in the scan");
             Command enableHashset = new Command("hashset-on", "Enables a previously disabled hashset");
             Command renameHashset = new Command("rename", "Renames a designated hashset");
-            Command traverse = new Command("traverse", "Scans the speficied path");
+            Command traverse = new Command("traverse", "Scans the specified path");
 
             // The root command.
             RootCommand rCommand = new RootCommand("This is the root command for HashAxe made by Wonik. If you are seeing this, that means HashAxe is installed properly.");
@@ -171,6 +171,7 @@ namespace HashAxe
                 HttpResponseMessage response = await client.GetAsync(hashlist_url);
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
+                int totalLength = 0;
                 
                 Item? item =  JsonSerializer.Deserialize<Item>(
                     responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -202,6 +203,7 @@ namespace HashAxe
                     LineOutput.LogWarning("An integrity hash was not supplied. It is reccomended to use one.");
                 }
 
+                downloader.DeleteTemp();
                 Console.WriteLine("Importing ({0}) URLs..", item?.HashList.Count);
 
                 foreach (HashSource source in item.HashList){
@@ -211,21 +213,44 @@ namespace HashAxe
 
                     HttpResponseMessage sourceDownload = await client.GetAsync(source_url);
                     sourceDownload.EnsureSuccessStatusCode();
+                    
                     string rawSource = await sourceDownload.Content.ReadAsStringAsync();
                     string rawSourceHash = Hash.sha256(rawSource);
                     
-                    if (rawSourceHash == source_integrity){
-                        Console.WriteLine("Checksum passed");
-                    }
-                    else{
+                    if (rawSourceHash != source_integrity) {
                         LineOutput.WriteLineColor("Failed checksum. Expecting {0} but received {1}.", ConsoleColor.Red, source_integrity, rawSourceHash);
                         throw new Exception("Checksum failed");
                     }
+                    else {
+                        Console.WriteLine("Checksum passed");
+                    }
+
+                    downloader.DownloadTemp(rawSource);
+                    totalLength += downloader.NumHashes(rawSource.Length);
+                    Console.WriteLine("Downloaded to swap memory");
                 }
+                
+                Console.WriteLine("\nTOTAL # OF HASHES: {0}", totalLength);
+                Console.WriteLine("Now generating hashset..\n");
+                string hashsetFileName = Hash.sha256(DateTime.Now.ToString()) + ".dat";
+
+                using (FileStream fs = File.Create(Path.Combine(launchPath, "hashsets", hashsetFileName))){
+                    MD5Hash hashSet = new MD5Hash(totalLength, fs);
+                    foreach (string line in File.ReadLines(Path.Combine(launchPath, "temp", "swapsource.txt")))
+                    {
+                        hashSet.UploadHash(Encoding.UTF8.GetBytes(line));
+                    }
+                }
+
+
             }
             catch(Exception e){
                 LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);
                 LineOutput.WriteLineColor(e.Message, ConsoleColor.Red);
+            }
+            finally{
+                Console.WriteLine("Cleaning up..");
+                downloader.DeleteTemp();
             }
         }
 
