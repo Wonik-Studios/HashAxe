@@ -80,6 +80,15 @@ namespace HashAxe.LoadHash {
             public string hashlist_source {get; set;}
             public string hashlist_integrity {get; set;}
             public string hashset_source {get; set;}
+            
+            public HashList(string name, int NUM_HASHES, bool enabled, string hashlist_source, string hashlist_integrity, string hashset_source) {
+                this.name = name;
+                this.NUM_HASHES = NUM_HASHES;
+                this.enabled = enabled;
+                this.hashlist_source = hashlist_source;
+                this.hashlist_integrity = hashlist_integrity;
+                this.hashset_source = hashset_source;
+            }
         }
     }
 }

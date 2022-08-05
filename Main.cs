@@ -241,8 +241,10 @@ namespace HashAxe
                         hashSet.UploadHash(Encoding.UTF8.GetBytes(line));
                     }
                 }
-
-
+                customName = String.IsNullOrEmpty(customName) ? item.name : customName;
+                hashLists.Add(customName, new Downloader.HashList(customName, totalLength, true, hashlist_url, Hash.sha256(responseBody), hashsetFileName));
+                
+                downloader.UploadJson(hashLists.Values.ToList()); // Upload the new hashlist to the json file
             }
             catch(Exception e){
                 LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);
