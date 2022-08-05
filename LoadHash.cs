@@ -5,16 +5,19 @@ namespace HashAxe.LoadHash {
     // This class will be responsible for loading in all of the hashes from https://virusshare.com/hashes
     class Downloader {
         private const string jsonLink = "hashmap.json";
-        private string hashaxeRoot;
+        private string launchPath;
         private Dictionary<string, HashList> hashLists;
+        private int numFiles = 0;
+        private int NUM_HASHES;
         
-        public Downloader(string hashaxeRoot) {
-            this.hashaxeRoot = hashaxeRoot;
+        
+        public Downloader(string launchPath) {
+            this.launchPath = launchPath;
             this.hashLists = this.LoadJson();
         }
         
         public Dictionary<string, HashList> LoadJson() {
-            string path = Path.Combine(this.hashaxeRoot, jsonLink);
+            string path = Path.Combine(this.launchPath, jsonLink);
 
             if (!File.Exists(path))
             {
@@ -44,10 +47,26 @@ namespace HashAxe.LoadHash {
         }
         
         public void UploadJson(List<HashList> hashLists) {
-            string path = Path.Combine(this.hashaxeRoot, jsonLink);
+            string path = Path.Combine(this.launchPath, jsonLink);
             
             string json = JsonSerializer.Serialize(hashLists);
             File.WriteAllText(path, json);
+        }
+        
+        public void DownloadTemp(string content) {
+            content += content.EndsWith('\n') ? "" : "\n";
+            File.AppendAllText(
+                Path.Combine(this.launchPath, "temp", String.Format("swapsource.txt", ++numFiles)),
+                content
+            );
+        }
+        
+        public void DeleteTemp() {
+            File.Delete(Path.Combine(this.launchPath, "temp", "swapsource.txt"));
+        }
+        
+        public int NumHashes(int length) {
+            return length / 17; // works because it's logically sound
         }
         
         public Dictionary<string, HashList> GetHashLists() {
