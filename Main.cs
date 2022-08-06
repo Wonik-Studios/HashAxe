@@ -172,6 +172,7 @@ namespace HashAxe
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
                 int totalLength = 0;
+                int uploadedNum = 0;
                 
                 Item? item =  JsonSerializer.Deserialize<Item>(
                     responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -231,20 +232,33 @@ namespace HashAxe
                 }
                 
                 Console.WriteLine("\nTOTAL # OF HASHES: {0}", totalLength);
-                Console.WriteLine("Now generating hashset..\n");
+                Console.WriteLine("Compiling HashSet, this may take a while..\n");
                 string hashsetFileName = Hash.sha256(DateTime.Now.ToString()) + ".dat";
 
                 using (FileStream fs = File.Create(Path.Combine(launchPath, "hashsets", hashsetFileName))){
+                    Console.WriteLine("Percentage of Hashes Loaded:");
+                    Console.Write("0%");
+                    int onePercent = totalLength / 100;
                     MD5Hash hashSet = new MD5Hash(totalLength, fs);
+                    hashSet.FillHashes();
+                    
+                    int currentPercent = 0;
                     foreach (string line in File.ReadLines(Path.Combine(launchPath, "temp", "swapsource.txt")))
                     {
                         hashSet.UploadHash(Encoding.UTF8.GetBytes(line));
+                        uploadedNum++;
+                        
+                        if (uploadedNum == onePercent){
+                            Console.Write("\r{0}%", ++currentPercent);
+                            uploadedNum = 0;
+                        }
                     }
                 }
                 customName = String.IsNullOrEmpty(customName) ? item.name : customName;
                 hashLists.Add(customName, new Downloader.HashList(customName, totalLength, true, hashlist_url, Hash.sha256(responseBody), hashsetFileName));
                 
-                downloader.UploadJson(hashLists.Values.ToList()); // Upload the new hashlist to the json file
+                downloader.UploadJson(hashLists.Values.ToList());
+                LineOutput.LogSuccess("Successfully generated hashset {0}", customName);
             }
             catch(Exception e){
                 LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);

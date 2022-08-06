@@ -17,14 +17,12 @@ namespace HashAxe.MD5HashSet
             this.stream = stream;
             this.NUM_HASHES = NUM_HASHES;
             this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 2 + 1);
-            Console.WriteLine("This is the HASHLIST_LENGTH: " + this.HASHLIST_LENGTH);
 
             int i = 0;
             while(HASHLIST_LENGTH > Power(256, i)) {
                 i++;
             }
             this.NUM_BYTES = i;
-            Console.WriteLine("NUM_BYTES: " + this.NUM_BYTES);
         }
         
         private static long Power(int b, int e) {
@@ -61,7 +59,6 @@ namespace HashAxe.MD5HashSet
                 stream.Write(buffer, 0, buffer.Length);
             }
             stream.Position = 0;
-            Console.WriteLine("Filled hashes.dat with empty hashes.");
         }
 
         public void UploadHash(byte[] md5) {
@@ -129,14 +126,10 @@ namespace HashAxe.MD5HashSet
 
         //         byte[] myHash = StringToByteArray("2d75cc1bf8e57872781f9cd04a529256");
         //         byte[] myHash1 = StringToByteArray("2d75cc1bf8e57872781f9cd04a529258");
-
+        //         Console.WriteLine(DateTime.Now.Millisecond);
         //         hl.UploadHash(myHash);
-        //         hl.UploadHash(myHash1);
+        //         Console.WriteLine(DateTime.Now.Millisecond);
 
-        //         Console.WriteLine(hl.Contains(myHash));
-        //         Console.WriteLine(hl.Contains(myHash1));
-        //         Console.WriteLine(hl.Contains(StringToByteArray("2d75cc1bf8e57872781f9cd04a52925f")));
-        //         Console.WriteLine(hl.Contains(StringToByteArray("00f538c3d410822e241486ca061a57ee")));
         //     }
         //     Console.WriteLine("The program has Terminated");
         // }

@@ -5,7 +5,7 @@ namespace HashAxe.Crypto
 {
     class Hash
     {
-        public static String sha256(string data)
+        public static string sha256(string data)
         {
             SHA256 sha256 = SHA256.Create();
             byte[] rawData = Encoding.UTF8.GetBytes(data);
