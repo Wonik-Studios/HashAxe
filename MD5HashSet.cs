@@ -16,7 +16,7 @@ namespace HashAxe.MD5HashSet
         public MD5Hash(int NUM_HASHES, Stream stream) {
             this.stream = stream;
             this.NUM_HASHES = NUM_HASHES;
-            this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 2 + 1);
+            this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 5);
 
             int i = 0;
             while(HASHLIST_LENGTH > Power(256, i)) {
@@ -51,10 +51,8 @@ namespace HashAxe.MD5HashSet
             }
         }
 
-        public void FillHashes() {
-            byte[] size = BitConverter.GetBytes(HASHLIST_LENGTH);
-            
-            for(int i=0; i < 16; i++) {
+        public void FillHashes() {            
+            for(int i=0; i < 32; i++) {
                 byte[] buffer = new byte[HASHLIST_LENGTH];
                 stream.Write(buffer, 0, buffer.Length);
             }
@@ -63,29 +61,29 @@ namespace HashAxe.MD5HashSet
 
         public void UploadHash(byte[] md5) {
             int hash = this.HashMD5(md5);
-            byte[] buffer = new byte[16];
+            byte[] buffer = new byte[32];
             int inc = 0;
 
             do {
                 int pos = (hash + inc * inc) % HASHLIST_LENGTH;
 
-                stream.Seek(pos * 16L, SeekOrigin.Begin);
+                stream.Seek(pos * 32L, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
                 inc++;
             } while(buffer[0] != 0);
 
-            stream.Position -= 16;
+            stream.Position -= 32;
             stream.Write(md5, 0, buffer.Length);
         }
 
         public bool Contains(byte[] md5) {
-            byte[] buffer = new byte[16];
+            byte[] buffer = new byte[32];
             int hash = this.HashMD5(md5);
             int inc = 0;
             while(true) {
                 int pos = (hash + inc * inc) % HASHLIST_LENGTH;
 
-                stream.Seek(pos * 16L, SeekOrigin.Begin);
+                stream.Seek(pos * 32L, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
                 if(buffer[0] == 0) {
                     return false;
@@ -99,7 +97,7 @@ namespace HashAxe.MD5HashSet
 
         // This is the Hash function that will be used to determine which line of hashes.txt it will occupy.
         private int HashMD5(byte[] md5) {
-            byte[] hashPortion = new byte[16];
+            byte[] hashPortion = new byte[32];
             Array.Copy(md5, hashPortion, NUM_BYTES);
             
             return (int) (BitConverter.ToInt64(hashPortion) % HASHLIST_LENGTH);
@@ -107,14 +105,6 @@ namespace HashAxe.MD5HashSet
 
         public int GetHashListLength() {
             return HASHLIST_LENGTH;
-        }
-        
-        public static byte[] StringToByteArray(String hex) {
-            int NumberChars = hex.Length;
-            byte[] bytes = new byte[NumberChars / 2];
-            for (int i = 0; i < NumberChars; i += 2)
-                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-            return bytes;
         }
 
         // public static void Main(string[] args) {
@@ -124,12 +114,15 @@ namespace HashAxe.MD5HashSet
         //         MD5Hash hl = new MD5Hash(10^4, stream);
         //         hl.FillHashes();
 
-        //         byte[] myHash = StringToByteArray("2d75cc1bf8e57872781f9cd04a529256");
-        //         byte[] myHash1 = StringToByteArray("2d75cc1bf8e57872781f9cd04a529258");
-        //         Console.WriteLine(DateTime.Now.Millisecond);
+        //         byte[] myHash = Encoding.UTF8.GetBytes("2d75cc1bf8e57872781f9cd04a529256");
+        //         byte[] myHash1 = Encoding.UTF8.GetBytes("f461518ec34073ccd4507feadecd67ba");
         //         hl.UploadHash(myHash);
-        //         Console.WriteLine(DateTime.Now.Millisecond);
-
+        //         hl.UploadHash(myHash1);
+                
+                
+        //         Console.WriteLine(hl.Contains(myHash));
+        //         Console.WriteLine(hl.Contains(myHash1));
+        //         Console.WriteLine(hl.Contains(Encoding.UTF8.GetBytes("i like quantum mechanics because it describes the universe in a way that is both elegant and simple.")));
         //     }
         //     Console.WriteLine("The program has Terminated");
         // }

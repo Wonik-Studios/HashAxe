@@ -66,7 +66,7 @@ namespace HashAxe.LoadHash {
         }
         
         public int NumHashes(int length) {
-            return length / 17; // works because it's logically sound
+            return length / 33; // works because it's not logically sound
         }
         
         public Dictionary<string, HashList> GetHashLists() {
@@ -78,15 +78,12 @@ namespace HashAxe.LoadHash {
             public int NUM_HASHES {get; set;}
             public bool enabled {get; set;}
             public string hashlist_source {get; set;}
-            public string hashlist_integrity {get; set;}
             public string hashset_source {get; set;}
             
-            public HashList(string name, int NUM_HASHES, bool enabled, string hashlist_source, string hashlist_integrity, string hashset_source) {
+            public HashList(string name, int NUM_HASHES, bool enabled, string hashset_source) {
                 this.name = name;
                 this.NUM_HASHES = NUM_HASHES;
                 this.enabled = enabled;
-                this.hashlist_source = hashlist_source;
-                this.hashlist_integrity = hashlist_integrity;
                 this.hashset_source = hashset_source;
             }
         }

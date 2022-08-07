@@ -11,6 +11,7 @@ using HashAxe.FileTraverser;
 using HashAxe.MD5HashSet;
 using HashAxe.LoadHash;
 
+
 namespace HashAxe
 {
     class HashAxeMain
@@ -20,12 +21,13 @@ namespace HashAxe
         private static Downloader downloader;
         private static string launchPath;
 
+
         static async Task Main(string[] args)
         {
             // Initialize the Commands
             Command checksum = new Command("checksum", "Checks for remote updates on the hashlists and makes sure locally stored hashsets have not been corrupted");
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
-            Command downloadHashset = new Command("hashset-get", "Install a hashset from a hashlist url");
+            Command compileHashlist = new Command("compile", "Compiles a HashAxe hashlist from a file into a binary .dat file");
             Command removeHashet = new Command("hashset-remove", "Uninstalls a hashset from the configuration");
             Command disableHashset = new Command("hashset-off", "Disables a hashset so it won't be included in the scan");
             Command enableHashset = new Command("hashset-on", "Enables a previously disabled hashset");
@@ -36,13 +38,10 @@ namespace HashAxe
             RootCommand rCommand = new RootCommand("This is the root command for HashAxe made by Wonik. If you are seeing this, that means HashAxe is installed properly.");
 
             // Set the arguments for the commands.
-            Argument<string> hashlistUrlArg = new Argument<string>("Hashlist Source", "Http link to the source file of the hashlist");
-            Option<string> integrityArg = new Option<string>("--integrity", "Optional parameter that ensures the content of the downloaded file. SHA256");
-            Option<string> customNameArg = new Option<string>("--setname", "Optional parameter which disregards name listed in hashlist and allows you to supply your own name for the HashSet");
-
-            downloadHashset.Add(hashlistUrlArg);
-            downloadHashset.Add(integrityArg);
-            downloadHashset.Add(customNameArg);
+            Argument<FileSystemInfo> hashlistPathArg = new Argument<FileSystemInfo>("Hashlist Input", "Path to the hashlist json file to be compiled");
+            Argument<FileSystemInfo> hashetOutputArg = new Argument<FileSystemInfo>("Hashset Output", "Path to the output hashset file");
+            compileHashlist.Add(hashlistPathArg);
+            compileHashlist.Add(hashetOutputArg);
             
             Argument<string> searchPathArg = new Argument<string>("search-path", "The directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
             traverse.Add(searchPathArg);
@@ -63,7 +62,7 @@ namespace HashAxe
             
             rCommand.Add(checksum);
             rCommand.Add(listHashets);
-            rCommand.Add(downloadHashset);
+            rCommand.Add(compileHashlist);
             rCommand.Add(removeHashet);
             rCommand.Add(disableHashset);
             rCommand.Add(enableHashset);
@@ -85,10 +84,33 @@ namespace HashAxe
                 await Cmd_ListHashSets();
             });
 
-            downloadHashset.SetHandler(async (string hashlist_url, string? integrity, string? customName) =>
+            compileHashlist.SetHandler(async ( hashlist_input, hashset_output) =>
             {
-                await Cmd_DownloadHashset(hashlist_url, integrity, customName);
-            }, hashlistUrlArg, integrityArg, customNameArg);
+                FileInfo? hashlistInput = null;
+                FileInfo? hashsetOutput = null;
+
+                switch (hashlist_input)
+                {
+                    case FileInfo file:
+                        hashlistInput = file;
+                        break;
+                    default:
+                        Console.WriteLine("Hashlist input argument is invalid");
+                        break;
+                }
+
+                switch (hashset_output)
+                {
+                    case FileInfo file:
+                        hashsetOutput = file;
+                        break;
+                    default:
+                        Console.WriteLine("Hashset output is invalid");
+                        break;
+                }
+
+                await Cmd_CompileHashlist(hashlistInput, hashsetOutput);
+            }, hashlistPathArg, hashetOutputArg);
 
             removeHashet.SetHandler(async (string name) =>
             {
@@ -160,19 +182,15 @@ namespace HashAxe
             return;
         }
 
-        internal static async Task Cmd_DownloadHashset(string hashlist_url, string? integrity = null, string? customName = null)
+        internal static async Task Cmd_CompileHashlist(FileInfo hashlist_input, FileInfo hashset_output)
         {
-            try{
-                if (!hashlist_url.StartsWith("http://") && !hashlist_url.StartsWith("https://")){
-                    LineOutput.WriteLineColor("The Hashlist source URL is invalid.", ConsoleColor.Red);
-                    return;
-                }
+            Console.WriteLine("Compiling new HashSet from Hashlist");
+            Console.WriteLine("Hashlist Input: {0}", hashlist_input.FullName);
+            Console.WriteLine("Hashset Output: {0}\n", hashset_output.FullName);
 
-                HttpResponseMessage response = await client.GetAsync(hashlist_url);
-                response.EnsureSuccessStatusCode();
-                string responseBody = await response.Content.ReadAsStringAsync();
-                int totalLength = 0;
-                int uploadedNum = 0;
+            try{
+                
+                string responseBody = File.ReadAllText(hashlist_input.FullName);
                 
                 Item? item =  JsonSerializer.Deserialize<Item>(
                     responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -183,90 +201,105 @@ namespace HashAxe
                 } else {
                     throw new Exception("The hashlist on the URL is empty.");
                 }
-                
-                Console.WriteLine();
-                LineOutput.LogSuccess("Downloaded {0}", hashlist_url);
-                
-                if (!String.IsNullOrEmpty(integrity)){
-                    string checksum = Hash.sha256(responseBody);
-                    integrity = integrity.Trim();
-                    Console.WriteLine("\nINCOMING HASH: {0}\nINTEGRITY HASH: {1}", checksum, integrity);
 
-                    if (checksum != integrity){
-                        throw new Exception("The supplied integrity hash does not match the checksum of the downloaded file. The web server might be trying to play you dirty!");
-                    }
-                    else{
-                        Console.WriteLine();
-                        LineOutput.LogSuccess("Checksum pased");
-                    }
-                }
-                else{
-                    LineOutput.LogWarning("An integrity hash was not supplied. It is reccomended to use one.");
-                }
+                int totalLength = 0;
+                int uploadedNum = 0;
 
                 downloader.DeleteTemp();
-                Console.WriteLine("Importing ({0}) URLs..", item?.HashList.Count);
 
-                foreach (HashSource source in item.HashList){
-                    string source_url = source.sourceUrl;
-                    string source_integrity = source.integrity;
-                    Console.WriteLine("Importing.. {0}", source_url);
+                if (item.HashList != null) {
+                    Console.WriteLine("Importing ({0}) URLs..", item?.HashList.Count);
+                    foreach (HashSource source in item.HashList)
+                    {
+                        string source_url = source.sourceUrl;
+                        string source_integrity = source.integrity;
+                        Console.WriteLine("Importing.. {0}", source_url);
 
-                    HttpResponseMessage sourceDownload = await client.GetAsync(source_url);
-                    sourceDownload.EnsureSuccessStatusCode();
-                    
-                    string rawSource = await sourceDownload.Content.ReadAsStringAsync();
-                    string rawSourceHash = Hash.sha256(rawSource);
-                    
-                    if (rawSourceHash != source_integrity) {
-                        LineOutput.WriteLineColor("Failed checksum. Expecting {0} but received {1}.", ConsoleColor.Red, source_integrity, rawSourceHash);
-                        throw new Exception("Checksum failed");
+                        HttpResponseMessage sourceDownload = await client.GetAsync(source_url);
+                        sourceDownload.EnsureSuccessStatusCode();
+
+                        string rawSource = await sourceDownload.Content.ReadAsStringAsync();
+                        string rawSourceHash = Hash.sha256(rawSource);
+
+                        if (rawSourceHash != source_integrity)
+                        {
+                            LineOutput.WriteLineColor("Failed checksum. Expecting {0} but received {1}.", ConsoleColor.Red, source_integrity, rawSourceHash);
+                            throw new Exception("Checksum failed");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Checksum passed");
+                        }
+
+                        downloader.DownloadTemp(rawSource);
+                        totalLength += downloader.NumHashes(rawSource.Length);
+                        Console.WriteLine("Downloaded to swap memory");
                     }
-                    else {
-                        Console.WriteLine("Checksum passed");
-                    }
-
-                    downloader.DownloadTemp(rawSource);
-                    totalLength += downloader.NumHashes(rawSource.Length);
-                    Console.WriteLine("Downloaded to swap memory");
                 }
                 
+                int numRawHashes = item.rawHashes != null ? item.rawHashes.Count : 0;
+                totalLength += numRawHashes;
+                        
                 Console.WriteLine("\nTOTAL # OF HASHES: {0}", totalLength);
                 Console.WriteLine("Compiling HashSet, this may take a while..\n");
                 string hashsetFileName = Hash.sha256(DateTime.Now.ToString()) + ".dat";
 
-                using (FileStream fs = File.Create(Path.Combine(launchPath, "hashsets", hashsetFileName))){
+                using (BufferedStream fs = new BufferedStream(File.Create(hashset_output.FullName))) {
                     Console.WriteLine("Percentage of Hashes Loaded:");
                     Console.Write("0%");
-                    int onePercent = totalLength / 100;
+                    
                     MD5Hash hashSet = new MD5Hash(totalLength, fs);
                     hashSet.FillHashes();
                     
-                    int currentPercent = 0;
-                    foreach (string line in File.ReadLines(Path.Combine(launchPath, "temp", "swapsource.txt")))
-                    {
-                        hashSet.UploadHash(Encoding.UTF8.GetBytes(line));
-                        uploadedNum++;
-                        
-                        if (uploadedNum == onePercent){
-                            Console.Write("\r{0}%", ++currentPercent);
-                            uploadedNum = 0;
+                    long prev = 0;
+                    if (item.rawHashes != null){
+                        foreach (string rawHash in item.rawHashes)
+                        {
+                            hashSet.UploadHash(Encoding.UTF8.GetBytes(rawHash));
+                            uploadedNum++;
+
+                            long cur = uploadedNum * 100L / totalLength;
+                            if(prev != cur) {
+                                Console.Write("\r{0}%", uploadedNum * 100L / totalLength);
+                                prev = cur;
+                            }
+                        }
+                    }
+                    
+                    if(item.HashList != null) {
+                        using(BufferedStream bs = new BufferedStream(File.OpenRead(Path.Combine(launchPath, "temp", "swapsource.txt")))) {
+                            byte[] buffer = new byte[32];
+                            for(int i=0; i < totalLength - numRawHashes; i++) {
+                                bs.Read(buffer, 0, 32);
+                                hashSet.UploadHash(buffer);
+                                uploadedNum++;
+                                bs.Position++;
+                                
+                                long cur = uploadedNum * 100L / totalLength;
+                                if(prev != cur) {
+                                    Console.Write("\r{0}%", uploadedNum * 100L / totalLength);
+                                    prev = cur;
+                                }
+                            }
                         }
                     }
                 }
-                customName = String.IsNullOrEmpty(customName) ? item.name : customName;
-                hashLists.Add(customName, new Downloader.HashList(customName, totalLength, true, hashlist_url, Hash.sha256(responseBody), hashsetFileName));
                 
-                downloader.UploadJson(hashLists.Values.ToList());
-                LineOutput.LogSuccess("Successfully generated hashset {0}", customName);
+                
+                Console.WriteLine();
+                Console.WriteLine();
+                LineOutput.LogSuccess("HashSet successfully compiled:");
+                Console.WriteLine("# OF HASHES: {0}", totalLength);
+                Console.WriteLine("OUTPUT: {0}", hashset_output.FullName);
             }
             catch(Exception e){
                 LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);
                 LineOutput.WriteLineColor(e.Message, ConsoleColor.Red);
+                Console.Write(e.StackTrace);
             }
             finally{
-                Console.WriteLine("Cleaning up..");
                 downloader.DeleteTemp();
+                Console.WriteLine("\nCleaning up..");
             }
         }
 
@@ -370,7 +403,6 @@ namespace HashAxe
                 Console.WriteLine("-------------------------------------------------------------------------");
                 Console.WriteLine("NAME         | {0}", entry.name);
                 Console.WriteLine("HASHLIST SRC | {0}", entry.hashlist_source);
-                Console.WriteLine("INTEGRITY    | {0}", entry.hashlist_integrity);
                 Console.WriteLine("# OF HASHES  | {0}", entry.NUM_HASHES);
                 Console.WriteLine("ENABLED      | {0}", entry.enabled ? "YES" : "NO");
             }
@@ -414,9 +446,8 @@ namespace HashAxe
         }
         
         private class Item {
-            public string? name {get; set;}
-            public string? compiledIntegrity {get; set;}
             public List<HashSource>? HashList {get; set;}
+            public List<string>? rawHashes {get; set;}
         }
         
         private class HashSource {
