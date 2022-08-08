@@ -160,6 +160,7 @@ namespace HashAxe
             launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
             string hashsets_root = Path.Combine(launchPath, "hashsets");
             string temp_root = Path.Combine(launchPath, "temp");
+            string config_root = Path.Combine(launchPath, "hashmap.json");
 
             LineOutput.WriteLineColor("HashAxe {0}", ConsoleColor.Green, Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             LineOutput.WriteLineColor("Brought to you by the lovely members of Wonik", ConsoleColor.Green);
@@ -182,6 +183,14 @@ namespace HashAxe
                 {
                     Directory.CreateDirectory(temp_root);
                     Console.WriteLine("Initalized empty Temp directory at {0}", hashsets_root);
+                }
+
+                if (!File.Exists(config_root))
+                {
+                    using (FileStream fs = File.Create(config_root)){
+                        fs.Write(Encoding.UTF8.GetBytes("[]"));
+                    }
+                    Console.WriteLine("Initalized empty HashAxe configuration file at {0}", config_root);
                 }
             }
             catch (Exception e)
