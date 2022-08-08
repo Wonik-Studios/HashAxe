@@ -3,7 +3,5 @@ bin/
 dist/
 .vscode/
 test/
-testhaslist.md5
-mynewdatfile.dat
-jimmychoo.dat
+HashAxe/
 robbanks/
