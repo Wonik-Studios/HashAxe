@@ -11,13 +11,18 @@ namespace HashAxe.Crypto
             byte[] rawData = Encoding.UTF8.GetBytes(data);
             byte[] hashed = sha256.ComputeHash(rawData);
 
-            StringBuilder stringbuilder = new StringBuilder();
-            for (int i = 0; i < hashed.Length; i++)
+            return hex(hashed);
+        }
+
+        public static string hex(byte[] data){
+            StringBuilder hexData = new StringBuilder();
+
+            for (int i = 0; i < data.Length; i++)
             {
-                stringbuilder.Append(hashed[i].ToString("x2"));
+                hexData.Append(data[i].ToString("x2"));
             }
 
-            return stringbuilder.ToString();
+            return hexData.ToString();
         }
     }
 }

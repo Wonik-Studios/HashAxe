@@ -1,5 +1,8 @@
 using HashAxe.MD5HashSet;
 using System.Security.Cryptography;
+using System.Text;
+using HashAxe.Crypto;
+using HashAxe.ModifiedOutput;
 
 
 namespace HashAxe.FileTraverser
@@ -14,7 +17,7 @@ namespace HashAxe.FileTraverser
 
         public Traverser(string path, MD5Hash hashSet, MD5 md5)
         {
-            this.path = path;
+            this.path = Path.GetFullPath(path);
             this.hashSet = hashSet;
             this.md5 = md5;
         }
@@ -35,23 +38,30 @@ namespace HashAxe.FileTraverser
             foreach(string d in Directory.GetFiles(dir)) {
                 try {
                     TraverseFile(d);
-                } catch(System.Exception e){}
+                } catch(Exception){}
             }
 
             foreach(string d in Directory.GetDirectories(dir)) {
                 try {
                     TraverseDir(d);
-                } catch(System.Exception e) {}
+                } catch(Exception) {}
             }
         }
 
         private void TraverseFile(string file) {
-            byte[] hash = this.GetMD5(file);
-            if(hashSet.Contains(hash)) {
-                flagged.Add(file);
+            try {
+                byte[] hash = this.GetMD5(file);
+                string hexHash = Hash.hex(hash);
+
+                if(hashSet.Contains(Encoding.UTF8.GetBytes(hexHash))) {
+                    flagged.Add(file);
+                }
+                filesTraversed++;
+
+                Console.WriteLine(file + " : " +  hexHash);
+            } catch(Exception) {
+                LineOutput.LogWarning("Failed to check the file {0} properly", file);
             }
-            filesTraversed++;
-            Console.WriteLine(file + " : " +  hash);
         }
 
         private byte[] GetMD5(string file) {

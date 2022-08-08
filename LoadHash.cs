@@ -56,7 +56,7 @@ namespace HashAxe.LoadHash {
         public void DownloadTemp(string content) {
             content += content.EndsWith('\n') ? "" : "\n";
             File.AppendAllText(
-                Path.Combine(this.launchPath, "temp", String.Format("swapsource.txt", ++numFiles)),
+                Path.Combine(this.launchPath, "temp", "swapsource.txt"),
                 content
             );
         }
@@ -66,7 +66,8 @@ namespace HashAxe.LoadHash {
         }
         
         public int NumHashes(int length) {
-            return length / 33; // works because it's not logically sound
+            Console.WriteLine(length % 33 == 0);
+            return length / 33;
         }
         
         public Dictionary<string, HashList> GetHashLists() {
@@ -77,7 +78,6 @@ namespace HashAxe.LoadHash {
             public string name {get; set;}
             public int NUM_HASHES {get; set;}
             public bool enabled {get; set;}
-            public string hashlist_source {get; set;}
             public string hashset_source {get; set;}
             
             public HashList(string name, int NUM_HASHES, bool enabled, string hashset_source) {
