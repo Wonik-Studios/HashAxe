@@ -43,10 +43,8 @@ namespace HashAxe
             compileHashlist.Add(hashetOutputArg);
 
             Argument<string> hashsetNameArg = new Argument<string>("HashSet Name", "The name of the hashset to be installed.");
-            Argument<int> hashsetLengthArg = new Argument<int>("HashSet Size", "the number of hashes contained within the binary file");
             Argument<FileSystemInfo> datPathArg = new Argument<FileSystemInfo>("DAT Binary Path", "Path to the .dat binary file");
             installHashset.Add(hashsetNameArg);
-            installHashset.Add(hashsetLengthArg);
             installHashset.Add(datPathArg);
 
             Argument<string> oldNameArg = new Argument<string>("old-name", "The name of the hashset that will be renamed.");
@@ -134,7 +132,7 @@ namespace HashAxe
                 Cmd_RenameHashSet(oldName, newName);
             }, oldNameArg, newNameArg);
 
-            installHashset.SetHandler((string name, int length, FileSystemInfo path) =>
+            installHashset.SetHandler((string name, FileSystemInfo path) =>
             {
                 FileInfo? datPath = null;
                 switch (path)
@@ -146,8 +144,8 @@ namespace HashAxe
                         Console.WriteLine("DAT Binary Path is invalid");
                         break;
                 }
-                Cmd_InstallHashset(name, length, datPath);
-            }, hashsetNameArg, hashsetLengthArg, datPathArg);
+                Cmd_InstallHashset(name, datPath);
+            }, hashsetNameArg, datPathArg);
 
             traverse.SetHandler((string searchPath) =>
             {
@@ -193,18 +191,13 @@ namespace HashAxe
             }
         }
 
-        internal static void Cmd_InstallHashset(string name, int length, FileSystemInfo path)
+        internal static void Cmd_InstallHashset(string name, FileSystemInfo path)
         {
             // Check if name contains any invalid characters.
+            int length = 0;
             if (!Regex.IsMatch(name, @"^[a-zA-Z0-9]+$"))
             {
                 LineOutput.LogFailure("The name of the hashset contains invalid characters. Please use only alphanumeric characters.");
-                return;
-            }
-
-            if (length < 1)
-            {
-                LineOutput.WriteLineColor("The length of the hashset must be greater than 0", ConsoleColor.Red);
                 return;
             }
 
@@ -213,8 +206,15 @@ namespace HashAxe
             {
                 LineOutput.LogFailure("The file {0} does not exist or is not a valid .dat", path.FullName);
                 return;
+            } else {
+                using(FileStream fs = File.OpenRead(path.FullName)) {
+                    byte[] buffer = new byte[4];
+                    fs.Read(buffer, 0, buffer.Length);
+                    length = BitConverter.ToInt32(buffer);
+                }
             }
-            else if (!path.FullName.EndsWith(".dat"))
+            
+            if (!path.FullName.EndsWith(".dat"))
             {
                 LineOutput.LogFailure("The file {0} is not a valid .dat", path.FullName);
                 return;
@@ -456,7 +456,7 @@ namespace HashAxe
                     {
                         using (FileStream fs = File.OpenRead(Path.Combine(launchPath, "hashsets", hashList.hashset_source)))
                         {
-                            MD5Hash hashSet = new MD5Hash(hashList.NUM_HASHES, fs);
+                            MD5Hash hashSet = new MD5Hash(fs);
                             using (MD5 md5 = MD5.Create())
                             {
                                 traverser = new Traverser(searchPath, hashSet, md5);

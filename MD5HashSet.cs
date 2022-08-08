@@ -10,19 +10,21 @@ namespace HashAxe.MD5HashSet
         // NUM_HEXADECIMAL: This is the number of hexadecimal digits that we take from the 
         private readonly int NUM_HASHES;
         private readonly int HASHLIST_LENGTH;
-        private readonly int NUM_BYTES;
         private Stream stream;
+
+
+        public MD5Hash(Stream stream) {
+            this.stream = stream;
+            byte[] buffer = new byte[4];
+            this.stream.Read(buffer, 0, buffer.Length);
+            this.NUM_HASHES = BitConverter.ToInt32(buffer);
+            this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 10 + 1);
+        }
 
         public MD5Hash(int NUM_HASHES, Stream stream) {
             this.stream = stream;
             this.NUM_HASHES = NUM_HASHES;
             this.HASHLIST_LENGTH = NextPrime(this.NUM_HASHES * 10 + 1);
-
-            int i = 0;
-            while(HASHLIST_LENGTH > Power(256, i)) {
-                i++;
-            }
-            this.NUM_BYTES = i;
         }
         
         private static long Power(int b, int e) {
@@ -52,7 +54,10 @@ namespace HashAxe.MD5HashSet
             }
         }
 
-        public void FillHashes() {        
+        public void FillHashes() {     
+            byte[] writeSize = BitConverter.GetBytes(NUM_HASHES);
+            stream.Write(writeSize, 0, writeSize.Length);
+            
             for(int i=0; i < 32; i++) {
                 byte[] buffer = new byte[HASHLIST_LENGTH];
                 stream.Write(buffer, 0, buffer.Length);
@@ -68,7 +73,7 @@ namespace HashAxe.MD5HashSet
             do {
                 int pos = (hash + inc * inc) % (int)HASHLIST_LENGTH;
 
-                stream.Seek(pos * 32L, SeekOrigin.Begin);
+                stream.Seek(pos * 32L + 4, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
                 inc++;
             } while(buffer[0] != 0);
@@ -84,7 +89,7 @@ namespace HashAxe.MD5HashSet
             while(true) {
                 int pos = (hash + inc * inc) % (int)HASHLIST_LENGTH;
 
-                stream.Seek(pos * 32L, SeekOrigin.Begin);
+                stream.Seek(pos * 32L + 4, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
                 if(buffer[0] == 0) {
                     return false;
