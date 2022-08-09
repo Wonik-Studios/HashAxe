@@ -71,7 +71,7 @@ namespace HashAxe.MD5HashSet
             int inc = 0;
 
             do {
-                int pos = (hash + inc * inc) % (int)HASHLIST_LENGTH;
+                int pos = (hash + inc * inc) % HASHLIST_LENGTH;
 
                 stream.Seek(pos * 32L + 4, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
@@ -87,7 +87,7 @@ namespace HashAxe.MD5HashSet
             int hash = this.HashMD5(md5);
             int inc = 0;
             while(true) {
-                int pos = (hash + inc * inc) % (int)HASHLIST_LENGTH;
+                int pos = (hash + inc * inc) % HASHLIST_LENGTH;
 
                 stream.Seek(pos * 32L + 4, SeekOrigin.Begin);
                 stream.Read(buffer, 0, buffer.Length);
