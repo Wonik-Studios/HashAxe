@@ -57,8 +57,6 @@ namespace HashAxe.FileTraverser
                     flagged.Add(file);
                 }
                 filesTraversed++;
-
-                Console.WriteLine(file + " : " +  hexHash);
             } catch(Exception) {
                 LineOutput.LogWarning("Failed to check the file {0} properly", file);
             }

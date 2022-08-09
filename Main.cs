@@ -27,8 +27,8 @@ namespace HashAxe
             Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
             Command compileHashlist = new Command("compile", "Compiles a HashAxe hashlist from a file into a binary .dat file");
             Command removeHashet = new Command("remove", "Uninstalls a hashset from the configuration");
-            Command disableHashset = new Command("hashset-off", "Disables a hashset so it won't be included in the scan");
-            Command enableHashset = new Command("hashset-on", "Enables a previously disabled hashset");
+            Command disableHashset = new Command("disable", "Disables a hashset so it won't be included in the scan");
+            Command enableHashset = new Command("enable", "Enables a previously disabled hashset");
             Command renameHashset = new Command("rename", "Renames a designated hashset");
             Command installHashset = new Command("install", "Installs a HashSet into the HashAxe configuration");
             Command traverse = new Command("traverse", "Scans the specified path");
@@ -492,8 +492,28 @@ namespace HashAxe
             
             Console.WriteLine("-----------------------------------------------------------------");
             
-            Console.WriteLine();
-            Console.WriteLine("Do you want to ");
+            if(flagged.Count > 0) {
+                Console.WriteLine();
+                Console.Write("Do you want to delete these files? [Y/n]: ");
+                
+                Regex regex = new Regex(@"(?i)y(es)?");
+                string? response = Console.ReadLine();
+
+                if (response != null && regex.IsMatch(response))
+                {
+                    int success = 0;
+                    foreach(string file in flagged) {
+                        try {
+                            File.Delete(file);
+                            success++;
+                        } catch(Exception e) {
+                            Console.WriteLine("Failed to Remove the file {0}", file);
+                        }
+                    }
+                    LineOutput.LogSuccess("Successfully deleted {0} files.", success);
+                }
+            }
+            Console.WriteLine("Exiting out of Command...");
             return;
         }
     }
