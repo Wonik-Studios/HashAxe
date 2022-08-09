@@ -489,6 +489,11 @@ namespace HashAxe
             {
                 Console.WriteLine(file);
             }
+            
+            Console.WriteLine("-----------------------------------------------------------------");
+            
+            Console.WriteLine();
+            Console.WriteLine("Do you want to ");
             return;
         }
     }
