@@ -158,6 +158,7 @@ namespace HashAxe
         internal static void root()
         {
             launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
+            Console.WriteLine(launchPath);
             string hashsets_root = Path.Combine(launchPath, "hashsets");
             string temp_root = Path.Combine(launchPath, "temp");
             string config_root = Path.Combine(launchPath, "hashmap.json");

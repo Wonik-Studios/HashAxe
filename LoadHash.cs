@@ -53,21 +53,8 @@ namespace HashAxe.LoadHash {
             File.WriteAllText(path, json);
         }
         
-        public void DownloadTemp(string content) {
-            content += content.EndsWith('\n') ? "" : "\n";
-            File.AppendAllText(
-                Path.Combine(this.launchPath, "temp", "swapsource.txt"),
-                content
-            );
-        }
-        
         public void DeleteTemp() {
             File.Delete(Path.Combine(this.launchPath, "temp", "swapsource.txt"));
-        }
-        
-        public int NumHashes(int length) {
-            Console.WriteLine(length % 33 == 0);
-            return length / 33;
         }
         
         public Dictionary<string, HashList> GetHashLists() {
