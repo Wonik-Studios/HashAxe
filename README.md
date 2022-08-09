@@ -11,6 +11,6 @@ Extract zip into a path of your choice, preferably C:\Program Files(x86)\
 1. Extract linux binary into /etc/ so all the HashAxe files are located inside /etc/HashAxe
 2. Claim ownership of the HashAxe binary by running "sudo chmod +x /etc/HashAxe/HashAxe"
 3. Create a new file in /usr/bin/ called "hashaxe" and add the following content:
-```#! /bin/sh
-exec /etc/HashAxe/HashAxe "$@"```
+```#! /bin/sh```
+```exec /etc/HashAxe/HashAxe "$@"```
 4. Claim ownership of the new file you created by running ```sudo chmod +x /usr/bin/hashaxe```
