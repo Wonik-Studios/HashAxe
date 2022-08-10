@@ -103,7 +103,7 @@ namespace HashAxe.MD5HashSet
 
         // This is the Hash function that will be used to determine which line of hashes.txt it will occupy.
         private int HashMD5(byte[] md5) {
-            return BitConverter.ToInt32(md5, 24) % HASHLIST_LENGTH;
+            return (int) (BitConverter.ToInt64(md5, 24) % HASHLIST_LENGTH);
         }
 
         public int GetHashListLength() {
