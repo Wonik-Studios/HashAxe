@@ -158,7 +158,6 @@ namespace HashAxe
         internal static void root()
         {
             launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
-            Console.WriteLine(launchPath);
             string hashsets_root = Path.Combine(launchPath, "hashsets");
             string temp_root = Path.Combine(launchPath, "temp");
             string config_root = Path.Combine(launchPath, "hashmap.json");
@@ -474,19 +473,20 @@ namespace HashAxe
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(String.Format("An Error has stopped the hashList \"{0}\" from being properly checked against the files.", hashList.name));
+                        Console.WriteLine(String.Format("An error has stopped the hashList \"{0}\" from being properly checked against the files.", hashList.name));
                         LineOutput.LogFailure(e.Message);
                         
                     }
                 }
             }
 
-            Console.WriteLine();
-            Console.WriteLine(flagged.Count + " HITS:");
+            Console.WriteLine(String.Format("\n\n{0} HITS", flagged.Count));
+            Console.ForegroundColor = ConsoleColor.Red;
             foreach (string file in flagged)
             {
                 Console.WriteLine(file);
             }
+            Console.ForegroundColor = ConsoleColor.White;
 
             
             if(flagged.Count > 0) {

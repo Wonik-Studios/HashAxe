@@ -10,7 +10,7 @@ namespace HashAxe.ModifiedOutput{
 
         public static void LogSuccess(string content, object? arg0 = null, object? arg1 = null)
         {
-            Console.Write("[");
+            Console.Write("\r[");
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("SUCCESS");
             Console.ForegroundColor = ConsoleColor.White;
@@ -21,7 +21,7 @@ namespace HashAxe.ModifiedOutput{
 
         public static void LogWarning(string content, object? arg0 = null, object? arg1 = null)
         {
-            Console.Write("[");
+            Console.Write("\r[");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("WARNING");
             Console.ForegroundColor = ConsoleColor.White;
@@ -31,7 +31,7 @@ namespace HashAxe.ModifiedOutput{
         }
         
         public static void LogFailure(string content, object? arg0 = null, object? arg1 = null) {
-            Console.Write("[");
+            Console.Write("\r[");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("FAILURE");
             Console.ForegroundColor = ConsoleColor.White;

@@ -8,6 +8,7 @@ using HashAxe.ModifiedOutput;
 namespace HashAxe.FileTraverser
 {
     public class Traverser {
+        private long completedFiles;
         private string path { get; set; }
         private MD5Hash hashSet;
         private List<string> flagged = new List<string>();
@@ -35,16 +36,28 @@ namespace HashAxe.FileTraverser
         }
 
         private void TraverseDir(string dir) {
-            foreach(string d in Directory.GetFiles(dir)) {
-                try {
-                    TraverseFile(d);
-                } catch(Exception){}
-            }
+            try {
+                foreach (string d in Directory.GetFiles(dir))
+                {
+                    try
+                    {
+                        TraverseFile(d);
+                    }
+                    catch (Exception) { }
+                    completedFiles++;
+                    Console.Write("\rFiles completed: {0}", completedFiles);
+                }
 
-            foreach(string d in Directory.GetDirectories(dir)) {
-                try {
-                    TraverseDir(d);
-                } catch(Exception) {}
+                foreach (string d in Directory.GetDirectories(dir))
+                {
+                    try
+                    {
+                        TraverseDir(d);
+                    }
+                    catch (Exception) { }
+                }
+            } catch(Exception) {
+                LineOutput.LogWarning("Failed to traverse directory {0}", dir);
             }
         }
 
