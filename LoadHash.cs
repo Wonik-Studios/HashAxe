@@ -2,7 +2,6 @@ using System.Text.Json;
 
 
 namespace HashAxe.LoadHash {
-    // This class will be responsible for loading in all of the hashes from https://virusshare.com/hashes
     class Downloader {
         private const string jsonLink = "hashmap.json";
         private string launchPath;

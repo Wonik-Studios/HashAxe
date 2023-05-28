@@ -34,7 +34,7 @@ namespace HashAxe
             Command traverse = new Command("traverse", "Scans the specified path");
 
             // The root command.
-            RootCommand rCommand = new RootCommand("This is the root command for HashAxe made by Wonik. If you are seeing this, that means HashAxe is installed properly.");
+            RootCommand rCommand = new RootCommand("HashAxe is installed, view https://github.com/Wonik-Studios/HashAxe for some example usage.");
 
             // Set the arguments for the commands.
             Argument<FileSystemInfo> hashlistPathArg = new Argument<FileSystemInfo>("Hashlist Input", "Path to the hashlist json file to be compiled");
@@ -163,9 +163,6 @@ namespace HashAxe
             string temp_root = Path.Combine(launchPath, "temp");
             string config_root = Path.Combine(launchPath, "hashmap.json");
 
-            LineOutput.WriteLineColor("HashAxe {0}", ConsoleColor.Green, Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
-            LineOutput.WriteLineColor("Brought to you by the lovely members of Wonik", ConsoleColor.Green);
-
             try
             {
                 if (!Directory.Exists(launchPath))
@@ -232,7 +229,7 @@ namespace HashAxe
 
             if (hashLists.ContainsKey(name))
             {
-                LineOutput.LogFailure("HashSet with same name already exists.");
+                LineOutput.LogFailure("HashSet with the same name already exists.");
                 return;
             }
 
@@ -310,7 +307,7 @@ namespace HashAxe
             {
                 LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);
                 LineOutput.WriteLineColor(e.Message, ConsoleColor.Red);
-                Console.Write(e.StackTrace);
+                Console.Write(e.Message);
             }
             finally
             {
@@ -477,21 +474,20 @@ namespace HashAxe
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.StackTrace);
-                        LineOutput.LogFailure(String.Format("An Error has stopped the hashList {0} from being properly checked against the files.", hashList.name));
+                        Console.WriteLine(String.Format("An Error has stopped the hashList \"{0}\" from being properly checked against the files.", hashList.name));
+                        LineOutput.LogFailure(e.Message);
+                        
                     }
                 }
             }
 
             Console.WriteLine();
-            Console.WriteLine("These are the paths for the " + flagged.Count + " files that have been flagged:");
-            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine(flagged.Count + " HITS:");
             foreach (string file in flagged)
             {
                 Console.WriteLine(file);
             }
-            
-            Console.WriteLine("-----------------------------------------------------------------");
+
             
             if(flagged.Count > 0) {
                 Console.WriteLine();
