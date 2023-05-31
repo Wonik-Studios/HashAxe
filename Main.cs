@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Runtime.InteropServices;
 
 using HashAxe.Crypto;
 using HashAxe.ModifiedOutput;
@@ -207,7 +208,6 @@ namespace HashAxe
                 return;
             }
 
-            Console.WriteLine();
             if (!File.Exists(path.FullName))
             {
                 LineOutput.LogFailure("The file {0} does not exist or is not a valid .dat", path.FullName);
@@ -252,6 +252,7 @@ namespace HashAxe
 
         internal static void Cmd_CompileHashlist(FileInfo hashlist_input, FileInfo hashset_output)
         {
+            bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             Console.WriteLine("Compiling new HashSet from Hashlist");
             Console.WriteLine("Hashlist Input: {0}", hashlist_input.FullName);
             Console.WriteLine("Hashset Output: {0}", hashset_output.FullName);
@@ -260,7 +261,13 @@ namespace HashAxe
             {
                 downloader.DeleteTemp();
                 long length = new System.IO.FileInfo(hashlist_input.FullName).Length;
-                int totalLength = (int)((length + 2) / 34);
+
+                int totalLength;
+                if(isWindows) {
+                    totalLength = (int)((length + 2) / 34);
+                } else {
+                    totalLength = (int)((length + 2) / 33);
+                }
                 int uploadedNum = 0;
 
                 Console.WriteLine("Compiling HashSet, this may take a while..\n");
@@ -282,9 +289,12 @@ namespace HashAxe
                         {
                             bs.Read(buffer, 0, 32);
                             hashSet.UploadHash(buffer);
-
                             uploadedNum++;
-                            bs.Position += 2;
+                            if (isWindows) {
+                                bs.Position += 2;
+                            } else {
+                                bs.Position += 1;
+                            }
 
                             long cur = uploadedNum * 100L / totalLength;
                             if (prev != cur)
@@ -299,12 +309,12 @@ namespace HashAxe
                 Console.WriteLine();
                 Console.WriteLine();
                 LineOutput.LogSuccess("HashSet successfully compiled:");
-                Console.WriteLine("# OF HASHES: {0}", totalLength);
+                Console.WriteLine("# OF HASHES: {0}", totalLength); 
                 Console.WriteLine("OUTPUT: {0}", hashset_output.FullName);
             }
             catch (Exception e)
             {
-                LineOutput.WriteLineColor("\nhashset-get encountered an error", ConsoleColor.Red);
+                LineOutput.WriteLineColor("\nhashset-compile encountered an error", ConsoleColor.Red);
                 LineOutput.WriteLineColor(e.Message, ConsoleColor.Red);
                 Console.Write(e.Message);
             }
