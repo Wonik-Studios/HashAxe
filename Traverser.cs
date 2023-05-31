@@ -7,36 +7,45 @@ using HashAxe.ModifiedOutput;
 
 namespace HashAxe.FileTraverser
 {
-    public class Traverser {
+    public class Traverser
+    {
         private long completedFiles;
         private string path { get; set; }
         private MD5Hash hashSet;
         private List<string> flagged = new List<string>();
         private MD5 md5;
         private int filesTraversed;
+        private bool verboseLogging;
 
 
-        public Traverser(string path, MD5Hash hashSet, MD5 md5)
+        public Traverser(string path, MD5Hash hashSet, MD5 md5, bool verboseLogging)
         {
             this.path = Path.GetFullPath(path);
             this.hashSet = hashSet;
             this.md5 = md5;
+            this.verboseLogging = verboseLogging;
         }
 
-        public void Traverse() {
-            if(File.Exists(path)) {
+        public void Traverse()
+        {
+            if (File.Exists(path))
+            {
                 this.TraverseFile(path);
             }
-            else if(Directory.Exists(path)) {
+            else if (Directory.Exists(path))
+            {
                 this.TraverseDir(path);
             }
-            else {
+            else
+            {
                 throw new FileNotFoundException("The specified file or directory could not be found.");
             }
         }
 
-        private void TraverseDir(string dir) {
-            try {
+        private void TraverseDir(string dir)
+        {
+            try
+            {
                 foreach (string d in Directory.GetFiles(dir))
                 {
                     try
@@ -44,8 +53,6 @@ namespace HashAxe.FileTraverser
                         TraverseFile(d);
                     }
                     catch (Exception) { }
-                    completedFiles++;
-                    Console.Write("\rFiles completed: {0}", completedFiles);
                 }
 
                 foreach (string d in Directory.GetDirectories(dir))
@@ -56,63 +63,55 @@ namespace HashAxe.FileTraverser
                     }
                     catch (Exception) { }
                 }
-            } catch(Exception) {
+            }
+            catch (Exception)
+            {
                 LineOutput.LogWarning("Failed to traverse directory {0}", dir);
             }
         }
 
-        private void TraverseFile(string file) {
-            try {
+        private void TraverseFile(string file)
+        {
+            try
+            {
+
                 byte[] hash = this.GetMD5(file);
                 string hexHash = Hash.hex(hash);
 
-                if(hashSet.Contains(Encoding.UTF8.GetBytes(hexHash))) {
+                if (verboseLogging)
+                {
+                    Console.Write($"\rScanning.. {file} :: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(hexHash);
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+
+                completedFiles++;
+                Console.Write("\rFiles completed: {0}", completedFiles);
+
+                if (hashSet.Contains(Encoding.UTF8.GetBytes(hexHash)))
+                {
                     flagged.Add(file);
                 }
                 filesTraversed++;
-            } catch(Exception) {
-                LineOutput.LogWarning("Failed to check the file {0} properly", file);
+            }
+            catch (Exception)
+            {
+                LineOutput.LogWarning("Failed to check the file {0}", file);
             }
         }
 
-        private byte[] GetMD5(string file) {
-            using(FileStream fs = File.OpenRead(file)) {
+        private byte[] GetMD5(string file)
+        {
+            using (FileStream fs = File.OpenRead(file))
+            {
                 return md5.ComputeHash(fs);
             }
         }
 
-        public List<String> GetFlagged() {
+        public List<String> GetFlagged()
+        {
             return this.flagged;
         }
-        /*
-        public static void Main(string[] args) {
-            Traverser traverser;
-            using(FileStream fs = File.Create("data/hashes.dat")) {
-                MD5Hash hashSet = new MD5Hash(6, fs);
-                hashSet.UploadHash("2d75cc1bf8e57872781f9cd04a529256");
-                hashSet.UploadHash("00f538c3d410822e241486ca061a57ee");
-                hashSet.UploadHash("3f066dd1f1da052248aed5abc4a0c6a1");
-                hashSet.UploadHash("781770fda3bd3236d0ab8274577dddde");
-                hashSet.UploadHash("86b6c59aa48a69e16d3313d982791398");
-                // This is the hash for rawr.dat
-                hashSet.UploadHash("ef3a3971679c0368039d909527cdb972");
-
-                using(MD5 md5 = MD5.Create()) {
-                    Console.WriteLine();
-                    Console.WriteLine("This is a list of all the files that have been traversed along with their md5 hashes:");
-                    Console.WriteLine("----------------------------------------------------");
-                    traverser = new Traverser("/Users/nathankim/Documents/C#Projects/HashAxe/test", hashSet, md5);
-                    traverser.Traverse();
-                }
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("These are the files that have been flagged:");
-            Console.WriteLine("----------------------------------------------------");
-            foreach(string file in traverser.GetFlagged()) {
-                Console.WriteLine(file);
-            }
-        }
-        */
     }
 }

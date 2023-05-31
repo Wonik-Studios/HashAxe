@@ -1,3 +1,6 @@
+#pragma warning disable CS8618
+#pragma warning disable CS8604
+
 using System.CommandLine;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -34,9 +37,12 @@ namespace HashAxe
             Command installHashset = new Command("install", "Installs a HashSet into the HashAxe configuration");
             Command traverse = new Command("traverse", "Scans the specified path");
 
-            // The root command.
+            //             // The root command.
             RootCommand rCommand = new RootCommand("HashAxe is installed, view https://github.com/Wonik-Studios/HashAxe for some example usage.");
 
+            //Options
+            Option<bool> isVerbose = new Option<bool>(name: "-V", description: "Enables rich logging.", getDefaultValue: () => false);
+            traverse.Add(isVerbose);
             // Set the arguments for the commands.
             Argument<FileSystemInfo> hashlistPathArg = new Argument<FileSystemInfo>("Hashlist Input", "Path to the hashlist json file to be compiled");
             Argument<FileSystemInfo> hashetOutputArg = new Argument<FileSystemInfo>("Hashset Output", "Path to the output hashset file");
@@ -148,10 +154,10 @@ namespace HashAxe
                 Cmd_InstallHashset(name, datPath);
             }, hashsetNameArg, datPathArg);
 
-            traverse.SetHandler((string searchPath) =>
+            traverse.SetHandler((string searchPath, bool verboseLogging) =>
             {
-                Cmd_Traverse(searchPath);
-            }, searchPathArg);
+                Cmd_Traverse(searchPath, verboseLogging);
+            }, searchPathArg, isVerbose);
 
             await rCommand.InvokeAsync(args);
         }
@@ -185,7 +191,8 @@ namespace HashAxe
 
                 if (!File.Exists(config_root))
                 {
-                    using (FileStream fs = File.Create(config_root)){
+                    using (FileStream fs = File.Create(config_root))
+                    {
                         fs.Write(Encoding.UTF8.GetBytes("[]"));
                     }
                     Console.WriteLine("Initalized empty HashAxe configuration file at {0}", config_root);
@@ -212,14 +219,17 @@ namespace HashAxe
             {
                 LineOutput.LogFailure("The file {0} does not exist or is not a valid .dat", path.FullName);
                 return;
-            } else {
-                using(FileStream fs = File.OpenRead(path.FullName)) {
+            }
+            else
+            {
+                using (FileStream fs = File.OpenRead(path.FullName))
+                {
                     byte[] buffer = new byte[4];
                     fs.Read(buffer, 0, buffer.Length);
                     length = BitConverter.ToInt32(buffer);
                 }
             }
-            
+
             if (!path.FullName.EndsWith(".dat"))
             {
                 LineOutput.LogFailure("The file {0} is not a valid .dat", path.FullName);
@@ -263,9 +273,12 @@ namespace HashAxe
                 long length = new System.IO.FileInfo(hashlist_input.FullName).Length;
 
                 int totalLength;
-                if(isWindows) {
+                if (isWindows)
+                {
                     totalLength = (int)((length + 2) / 34);
-                } else {
+                }
+                else
+                {
                     totalLength = (int)((length + 2) / 33);
                 }
                 int uploadedNum = 0;
@@ -290,9 +303,12 @@ namespace HashAxe
                             bs.Read(buffer, 0, 32);
                             hashSet.UploadHash(buffer);
                             uploadedNum++;
-                            if (isWindows) {
+                            if (isWindows)
+                            {
                                 bs.Position += 2;
-                            } else {
+                            }
+                            else
+                            {
                                 bs.Position += 1;
                             }
 
@@ -309,7 +325,7 @@ namespace HashAxe
                 Console.WriteLine();
                 Console.WriteLine();
                 LineOutput.LogSuccess("HashSet successfully compiled:");
-                Console.WriteLine("# OF HASHES: {0}", totalLength); 
+                Console.WriteLine("# OF HASHES: {0}", totalLength);
                 Console.WriteLine("OUTPUT: {0}", hashset_output.FullName);
             }
             catch (Exception e)
@@ -459,7 +475,7 @@ namespace HashAxe
             return;
         }
 
-        internal static void Cmd_Traverse(string searchPath)
+        internal static void Cmd_Traverse(string searchPath, bool verboseLogging)
         {
             Traverser traverser;
             HashSet<string> flagged = new HashSet<string>();
@@ -475,7 +491,7 @@ namespace HashAxe
                             MD5Hash hashSet = new MD5Hash(fs);
                             using (MD5 md5 = MD5.Create())
                             {
-                                traverser = new Traverser(searchPath, hashSet, md5);
+                                traverser = new Traverser(searchPath, hashSet, md5, verboseLogging);
                                 traverser.Traverse();
                             }
                         }
@@ -485,7 +501,7 @@ namespace HashAxe
                     {
                         Console.WriteLine(String.Format("An error has stopped the hashList \"{0}\" from being properly checked against the files.", hashList.name));
                         LineOutput.LogFailure(e.Message);
-                        
+
                     }
                 }
             }
@@ -498,22 +514,27 @@ namespace HashAxe
             }
             Console.ForegroundColor = ConsoleColor.White;
 
-            
-            if(flagged.Count > 0) {
+
+            if (flagged.Count > 0)
+            {
                 Console.WriteLine();
                 Console.Write("Do you want to delete these files? [Y/n]: ");
-                
+
                 Regex regex = new Regex(@"(?i)y(es)?");
                 string? response = Console.ReadLine();
 
                 if (response != null && regex.IsMatch(response))
                 {
                     int success = 0;
-                    foreach(string file in flagged) {
-                        try {
+                    foreach (string file in flagged)
+                    {
+                        try
+                        {
                             File.Delete(file);
                             success++;
-                        } catch(Exception e) {
+                        }
+                        catch (Exception)
+                        {
                             Console.WriteLine("Failed to Remove the file {0}", file);
                         }
                     }
