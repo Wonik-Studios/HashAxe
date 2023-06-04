@@ -25,4 +25,20 @@ Open a terminal in the extracted directory. Give the binary executable access by
  
  Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal. To receive future updates, you will have to go through the same process.
 
-## Compiling From Source
+# Compiling From Source
+
+You will need the [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) to be able to compile the HashAxe source code to create an executable. Begin by downloading the source code from the release you want to compile, and extracting it.
+
+Open a terminal in the source code folder, and run the follwing:
+```sh
+dotnet publish
+```
+
+If you are compiling for a different platform then the one you are on, you can use the `-r` option to specify the runtime identifier (here are a list of [rupported runtime identifiers](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)). For example, compiling for linux on x64:
+```sh
+dotnet publish -r linux-x64
+```
+
+After the compilation process is complete, you will find a folder named `publish` that contains the executable file. This folder will be located within another folder named after the Runtime Identifier (RID) you compiled for, inside the `bin` directory which is created after compilation. To illustrate, if you compiled for the `win-x64` RID, the executable file can be accessed at `bin/win-x64/publish/HashAxe`.
+
+With this binary, you can then follow the normal installation procedures.
