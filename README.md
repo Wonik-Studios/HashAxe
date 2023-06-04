@@ -10,6 +10,7 @@ We provide x64 binaries of Hashaxe for all releases on both Windows and Linux. T
 Start by downloading a binary for your platform from [releases](https://github.com/Wonik-Studios/HashAxe/releases) and extracting it.
 
 **Windows**:
+
 On Windows, it's preffered that you extract it to a directory in C:/ to prevent it from being tampered with. 
 
 To be able to use `hashaxe` as a command, you'll need to add the folder where the HashAxe executable is located to your Path enviornment variable. 
@@ -19,6 +20,7 @@ Search up "Enviornment variables" in Windows search and open "Edit enviornment v
 HashAxe is now installed.
 
 **Linux**:
+
  Open a terminal in the extracted directory. Give the binary executable access by running `sudo chmod +x HashAxe` in the current directory. 
  
  To make the executable a commad, move the binary to `/usr/bin/` by running `mv HashAxe /usr/bin/hashaxe`. 
