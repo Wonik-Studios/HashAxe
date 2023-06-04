@@ -9,6 +9,8 @@ We provide x64 binaries of Hashaxe for all releases on both Windows and Linux. T
 
 Start by downloading a binary arhcive for your platform at [releases](https://github.com/Wonik-Studios/HashAxe/releases) and extracting it.
 
+An optional step is to check the integrity of the downloaded file to make sure it has not been corrupted or tampered with during download. We add the sha256 sums of all archives in the release notes. 
+
 ## Windows:
 
 On Windows, it's prefered that you extract the archive into to a directory in C:/ to prevent it from being tampered with. To be able to use `hashaxe` as a command, you'll need to add the folder where the HashAxe executable is located to your Path enviornment variable. 
