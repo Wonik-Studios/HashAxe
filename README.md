@@ -11,24 +11,16 @@ Start by downloading a binary for your platform from [releases](https://github.c
 
 ## Windows:
 
-On Windows, it's preffered that you extract it to a directory in C:/ to prevent it from being tampered with. 
+On Windows, it's preffered that you extract it to a directory in C:/ to prevent it from being tampered with. To be able to use `hashaxe` as a command, you'll need to add the folder where the HashAxe executable is located to your Path enviornment variable. 
 
-To be able to use `hashaxe` as a command, you'll need to add the folder where the HashAxe executable is located to your Path enviornment variable. 
-
-Search up "Enviornment variables" in Windows search and open "Edit enviornment variables for your account". Select "Path" in your list and click "Edit..". Press "New" to add a new entry. Insert in the path to the folder containing the HashAxe executable, and press OK. You can then close that app.
-
-HashAxe is now installed.
+Search up "Enviornment variables" in Windows search and open "Edit enviornment variables for your account". Select "Path" in your list and click "Edit..". Press "New" to add a new entry. Insert in the path to the folder containing the HashAxe executable, and press OK. You can then close that app, HashAxe is now installed.
 
 ## Linux:
 
- Open a terminal in the extracted directory. Give the binary executable access by running `sudo chmod +x HashAxe` in the current directory. 
- 
- To make the executable a commad, move the binary to `/usr/bin/` by running `mv HashAxe /usr/bin/hashaxe`. 
- 
- HashAxe is now installed.
+Open a terminal in the extracted directory. Give the binary executable access by running `sudo chmod +x HashAxe` in the current directory. To make the executable a commad, move the binary to `/usr/bin/` by running `mv HashAxe /usr/bin/hashaxe`. HashAxe is now installed.
  
 ## After installing:
  
- Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal.
+ Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal. To
 
 ## Compiling From Source
