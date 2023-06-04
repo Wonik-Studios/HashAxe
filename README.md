@@ -23,6 +23,6 @@ Open a terminal in the extracted directory. Give the binary executable access by
  
 ## After installing:
  
- Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal. To
+ Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal. To receive future updates, you will have to go through the same process.
 
 ## Compiling From Source
