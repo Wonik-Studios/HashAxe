@@ -28,6 +28,7 @@ HashAxe is now installed.
  HashAxe is now installed.
  
  **After Installing:**
+ 
  Verify that the HashAxe verison is installed correctly by running `hashaxe --version` in a terminal.
 
 ## Compiling From Source
