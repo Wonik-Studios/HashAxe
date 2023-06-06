@@ -25,7 +25,54 @@ wget https://virusshare.com/hashfiles/VirusShare_00001.md5
 wget https://virusshare.com/hashfiles/VirusShare_00002.md5
 ```
 
+These haslists are already formatted correctly, but they need to be compiled into a .DAT binary format to work install them into Hashaxe. The command for compiling hashlists is as follows
+```sh
+hashaxe compile  <Raw Hashlist Path> <.DAT Output Path>
+```
 
+We can compile all 3 binaries on both Windows & Linux platforms as follows:
+```sh
+hashaxe compile VirusShare_00000.md5 virusshare1.dat
+hashaxe compile VirusShare_00001.md5 virusshare2.dat
+hashaxe compile VirusShare_00002.md5 virusshare3.dat
+```
+
+Now that we have ready to use .DAT binaries, we can install them into the active configuration that HashAxe will use when traversing files. This is done by the `install` command:
+```
+hashaxe install <New Hashset Name> <.DAT Path>
+```
+We install the binaries as follows:
+```
+hashaxe install virusshare1 virusshare1.dat
+hashaxe install virusshare2 virusshare2.dat
+hashaxe install virusshare3 virusshare3.dat
+```
+The argument `<New Hashset Name>` can be anything you want it to be.
+
+To see all the hashsets we have installed, we can run `hashaxe hashsets` which will output the following:
+```
+-------------------------------------------------------------------------
+NAME             | virusshare1
+TIME OF CREATION | 2023-05-6--21-48-03
+# OF HASHES      | 131078
+ENABLED          | YES
+-------------------------------------------------------------------------
+NAME             | virusshare2
+TIME OF CREATION | 2023-05-6--21-48-07
+# OF HASHES      | 131078
+ENABLED          | YES
+-------------------------------------------------------------------------
+NAME             | virusshare3
+TIME OF CREATION | 2023-05-6--21-48-12
+# OF HASHES      | 131077
+ENABLED          | YES
+-------------------------------------------------------------------------
+```
+
+We can begin using the `traverse` command:
+```
+hashaxe traverse <Search path>
+```
 
 # Installation
 
