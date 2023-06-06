@@ -5,80 +5,51 @@ HashAxe is written entirely in C#.
 
 This README consists of only installation instructions. For a more in-depth overview of HashAxe, visit https://wonik.info/projects/hashaxe.
 
-# Example Usage
-
-[VirusShare](https://virusshare.com) is an open sourced maleware collection which contains millions of MD5 hashes for malware samples. [These](https://virusshare.com/hashes) lists of hashes can be used with HashAxe to check for the existance & return the paths of malicious files. 
-
-All the hash lists on VirusShare are formatted in a neat list as such:
+## Usage
+These are the list of the commands that are available on HashAxe. For clarification, the term "hashlist" will be referring to the collection of hashes provided by the user before compilation and "hashset" will be used to refer to these hashlists after the ```compile``` command has been run on it.
 ```
-hash1
-hash2
-hash3
-etc..
-```
-Meaning they can be easily used by HashAxe, and do not need to be formatted.
-
-We can grab a couple hashlists from the website, and download them raw on our computer. On linux, you can use `wget` to download files:
-```sh
-wget https://virusshare.com/hashfiles/VirusShare_00000.md5
-wget https://virusshare.com/hashfiles/VirusShare_00001.md5
-wget https://virusshare.com/hashfiles/VirusShare_00002.md5
+hashaxe compile <Hashlist Input> <Hashset Output>
+hashaxe install <HashSet Name> <DAT Binary Path>
+hashaxe hashsets
+hashaxe remove <hashset-name>
+hashaxe enable <hashset-name>
+hashaxe disable <hashset-name>
+hashaxe rename <old-name> <new-name>
+hashaxe traverse <search-path> -V true|false
 ```
 
-These haslists are already formatted correctly, but they need to be compiled into a .DAT binary format to work install them into Hashaxe. The command for compiling hashlists is as follows
-```sh
-hashaxe compile  <Raw Hashlist Path> <.DAT Output Path>
-```
+##### The Compile Command
+```hashaxe compile <Hashlist Input> <Hashset Output>``` is the install command and is used for formatting the file containing all of the md5 hashes so that HashAxe can efficiently check if a hash is contained in the file. <Hashlist Input> will specify the path of the file with the hashes that you wish to check your files against and <Hashset Output> will be the path that will store the resulting file. The method that's used for optimizing searches for the hashes will be explained under _Tech_.
 
-We can compile all 3 binaries on both Windows & Linux platforms as follows:
-```sh
-hashaxe compile VirusShare_00000.md5 virusshare1.dat
-hashaxe compile VirusShare_00001.md5 virusshare2.dat
-hashaxe compile VirusShare_00002.md5 virusshare3.dat
-```
+##### The Install Command
+After you've compiled your hashes and you've obtained your <Hashset Output> file, you can now add it into the HashAxe program by running ```hashaxe install <HashSet Name> <DAT Binary Path>```. The path that you've entered into <Hashset Output> or the file that was produced from the compile program will be your input for <DAT Binary Path>. It must be noted that **the <DAT Binary Path> argument must be of a file with a .dat extension**. The <HashSet Name> will be the name that will be given to the hashset or your collection of hashes. This name property will be used when enabling, disabling, removing or renaming the hashset.
 
-Now that we have ready to use .DAT binaries, we can install them into the active configuration that HashAxe will use when traversing files. This is done by the `install` command:
-```
-hashaxe install <New Hashset Name> <.DAT Path>
-```
-We install the binaries as follows:
-```
-hashaxe install virusshare1 virusshare1.dat
-hashaxe install virusshare2 virusshare2.dat
-hashaxe install virusshare3 virusshare3.dat
-```
-The argument `<New Hashset Name>` can be anything you want it to be.
+##### The Hashsets Command
+The Hashsets Command or ```hashaxe hashsets``` is a command that will log out all of the hashsets and information relating to it such as:
 
-To see all the hashsets we have installed, we can run `hashaxe hashsets` which will output the following:
-```
--------------------------------------------------------------------------
-NAME             | virusshare1
-TIME OF CREATION | 2023-05-6--21-48-03
-# OF HASHES      | 131078
-ENABLED          | YES
--------------------------------------------------------------------------
-NAME             | virusshare2
-TIME OF CREATION | 2023-05-6--21-48-07
-# OF HASHES      | 131078
-ENABLED          | YES
--------------------------------------------------------------------------
-NAME             | virusshare3
-TIME OF CREATION | 2023-05-6--21-48-12
-# OF HASHES      | 131077
-ENABLED          | YES
--------------------------------------------------------------------------
-```
+- **NAME**
+    > The name of the hashset. This will be the unique identifier for it.
+- **TIME OF CREATION**
+    > The time of creation is the time at which the ```install``` command finishes the it's installation.
+- **# OF HASHES**
+    > This is the total number of hashes that is contained in the hashset
+- **ENABLED**
+    > This denotes the status of the hashset or whether it is enabled or disabled. The significance of this will be explained under the ```traverse``` command.
 
-We can begin using the `traverse` command:
-```
-hashaxe traverse <Search path>
-```
+##### The Remove Command
+The ```hashaxe remove <hashset-name>``` command removes the hashset under the name  of <hashset-name>.
 
-The number of files completed will be logged in the output during the process. Completion may take a while based on the average size of files and the number of files in the search path. For verbose logging (outputs useful information, but slower), you can use the `-V` option on the traverse command.
+##### The Enable Command
+The ```hashaxe enable <hashset-name>``` command enables the hashset under the name <hashset-name>.
 
-When running Hashaxe with these hashsets on a Windows 10 liquidated computer, several files were found that matched with the hashes of malware when the search path was set to the downloads folder. Even with 1,392 files with an average file size of 493MB, Hashaxe only took 4 minutes to complete the scan.
+##### The Disable Command
+The ```hashaxe disable <hashset-name>``` command disables the hashset under the name <hashset-name>.
 
-Comparing hashes of files is a principal that most anitiviruses use. Hashaxe allows you to run this process indepenently from any paid antivirus software, while also being usable for much more use cases.
+##### The Rename Command
+The ```hashaxe rename <old-name> <new-name>``` command renames the hashset <old-name> into <new-name> provided that hashset <old-name> exists and that there are no hashsets named <new-name>.
+
+##### The Traverse Command
+The ```hashaxe traverse <search-path>``` command recursively iterates through all the files and directories under <search-path>. For every file that it encounters, it will check to see if it's hash is contained in any of the _enabled_ hashsets. All _disabled_ hashsets will be ignored. After it has iterated through all of the subdirectories and files, it will print a list of files that have been flagged by one of the enabled hashsets. There will be a prompt asking the user whether they would like to delete all of these files or not. In-depth verbose logging can be enabled using the `-V` option on the command. Verbose logging will output the file paths and their hashes as they are completed. This could potentially slow down the process.
 
 # Installation
 
