@@ -1,5 +1,5 @@
 # HashAxe
-![example workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![workflow](https://github.com/Wonik-Studios/HashAxe/actions/workflows/<WORKFLOW_FILE>/badge.svg)
 
 [https://wonik.info/projects/hashaxe](Hashaxe Example Usage)
 
