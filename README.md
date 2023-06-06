@@ -7,6 +7,24 @@ This README consists of only installation instructions. For a more in-depth over
 
 # Example Usage
 
+[VirusShare](https://virusshare.com) is an open sourced maleware collection which contains millions of MD5 hashes for malware samples. [These](https://virusshare.com/hashes) lists of hashes can be used with HashAxe to check for the existance & return the paths of malicious files. 
+
+All the hash lists on VirusShare are formatted in a neat list as such:
+```
+hash1
+hash2
+hash3
+etc..
+```
+Meaning they can be easily used by HashAxe, and do not need to be formatted.
+
+We can grab a couple hashlists from the website, and download them raw on our computer. On linux, you can use `wget` to download files:
+```sh
+wget https://virusshare.com/hashfiles/VirusShare_00000.md5
+wget https://virusshare.com/hashfiles/VirusShare_00001.md5
+wget https://virusshare.com/hashfiles/VirusShare_00002.md5
+```
+
 
 
 # Installation
