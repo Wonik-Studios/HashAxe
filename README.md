@@ -74,7 +74,11 @@ We can begin using the `traverse` command:
 hashaxe traverse <Search path>
 ```
 
-The number of files completed will be said in the output during the process. Completion may take a while based on the average size of files and the number of files in the search path. For verbose logging, you can use the `-V` option on the traverse command.
+The number of files completed will be logged in the output during the process. Completion may take a while based on the average size of files and the number of files in the search path. For verbose logging (outputs useful information, but slower), you can use the `-V` option on the traverse command.
+
+When running Hashaxe with these hashsets on a Windows 10 liquidated computer, several files were found that matched with the hashes of malware when the search path was set to the downloads folder. Even with 1,392 files with an average file size of 493MB, Hashaxe only took 4 minutes to complete the scan.
+
+Comparing hashes of files is a principal that most anitiviruses use. Hashaxe allows you to run this process indepenently from any paid antivirus software, while also being usable for much more use cases.
 
 # Installation
 
