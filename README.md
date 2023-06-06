@@ -74,6 +74,8 @@ We can begin using the `traverse` command:
 hashaxe traverse <Search path>
 ```
 
+The number of files completed will be said in the output during the process. Completion may take a while based on the average size of files and the number of files in the search path. For verbose logging, you can use the `-V` option on the traverse command.
+
 # Installation
 
 We provide x64 binaries of Hashaxe for all releases on both Windows and Linux. These binaries are self-contained, meaning that you do not need the .NET Framework installed on your computer to execute them. It is possible to to compile from source and install your own binaries instead if your platform isn't supported or you want to compile from source. For information about this, look under the installation instruction.
