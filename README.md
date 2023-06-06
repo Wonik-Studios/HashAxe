@@ -1,7 +1,5 @@
 # HashAxe
-![workflow](https://github.com/Wonik-Studios/HashAxe/actions/workflows/<WORKFLOW_FILE>/badge.svg)
-
-[https://wonik.info/projects/hashaxe](Hashaxe Example Usage)
+[HashAxe Example Usage](https://wonik.info/projects/hashaxe)
 
 HashAxe is a CLI utility which can traverse large directories to detect blacklisted files in a very timely manner. It can be used to remove malicious files, check for the existance of files on folders/drives when the MD5 hash is known, and to recover lost files when they are moved to an unknown path. 
 
