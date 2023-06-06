@@ -1,4 +1,8 @@
 # HashAxe
+![example workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+
+[https://wonik.info/projects/hashaxe](Hashaxe Example Usage)
+
 HashAxe is a CLI utility which can traverse large directories to detect blacklisted files in a very timely manner. It can be used to remove malicious files, check for the existance of files on folders/drives when the MD5 hash is known, and to recover lost files when they are moved to an unknown path. 
 
 HashAxe is written entirely in C#.
