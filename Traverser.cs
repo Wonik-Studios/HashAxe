@@ -80,7 +80,7 @@ namespace HashAxe.FileTraverser
 
                 if (verboseLogging)
                 {
-                    Console.Write($"\rScanning.. {file} :: ");
+                    Console.Write($"\r{file} :: ");
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine(hexHash);
                     Console.ForegroundColor = ConsoleColor.White;

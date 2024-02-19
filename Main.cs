@@ -2,7 +2,6 @@
 #pragma warning disable CS8604
 
 using System.CommandLine;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Text;
@@ -28,73 +27,56 @@ namespace HashAxe
         static async Task Main(string[] args)
         {
             // Initialize the Commands
-            Command listHashets = new Command("hashsets", "List all the installed hashsets in the configuration");
-            Command compileHashlist = new Command("compile", "Compiles a HashAxe hashlist from a file into a binary .dat file");
-            Command removeHashet = new Command("remove", "Uninstalls a hashset from the configuration");
-            Command disableHashset = new Command("disable", "Disables a hashset so it won't be included in the scan");
-            Command enableHashset = new Command("enable", "Enables a previously disabled hashset");
-            Command renameHashset = new Command("rename", "Renames a designated hashset");
-            Command installHashset = new Command("install", "Installs a HashSet into the HashAxe configuration");
-            Command traverse = new Command("traverse", "Scans the specified path");
+            Command cmdList = new Command("ls", "List hashsets.");
+            Command cmdCompile = new Command("compile", "Compile lists of hashes to hashset.");
+            Command cmdRemove = new Command("rm", "Uninstalls a hashset from the configuration.");
+            Command cmdDisable = new Command("off", "Disables a hashset so it won't be included in the scan.");
+            Command cmdEnable = new Command("on", "Enables a previously disabled hashset.");
+            Command cmdInstall = new Command("i", "Install a hashset.");
+            Command cmdScan = new Command("scan", "Scan a specified path.");
 
-            //             // The root command.
+            // The root command.
             RootCommand rCommand = new RootCommand("HashAxe is installed, view https://github.com/Wonik-Studios/HashAxe for some example usage.");
 
-            //Options
+            /* Options */
             Option<bool> isVerbose = new Option<bool>(name: "-V", description: "Enables rich logging.", getDefaultValue: () => false);
-            traverse.Add(isVerbose);
-            // Set the arguments for the commands.
-            Argument<FileSystemInfo> hashlistPathArg = new Argument<FileSystemInfo>("Hashlist Input", "Path to the hashlist json file to be compiled");
-            Argument<FileSystemInfo> hashetOutputArg = new Argument<FileSystemInfo>("Hashset Output", "Path to the output hashset file");
-            compileHashlist.Add(hashlistPathArg);
-            compileHashlist.Add(hashetOutputArg);
+            cmdScan.Add(isVerbose);
 
-            Argument<string> hashsetNameArg = new Argument<string>("HashSet Name", "The name of the hashset to be installed.");
-            Argument<FileSystemInfo> datPathArg = new Argument<FileSystemInfo>("DAT Binary Path", "Path to the .dat binary file");
-            installHashset.Add(hashsetNameArg);
-            installHashset.Add(datPathArg);
+            /* Arguments */
 
-            Argument<string> oldNameArg = new Argument<string>("old-name", "The name of the hashset that will be renamed.");
-            Argument<string> newNameArg = new Argument<string>("new-name", "The name that the old hashset will be renamed to.");
-            renameHashset.Add(oldNameArg);
-            renameHashset.Add(newNameArg);
+            Argument<FileSystemInfo> hashlistPathArg = new Argument<FileSystemInfo>("input", "Input hashlist file.");
+            cmdCompile.Add(hashlistPathArg);
 
-            Argument<string> searchPathArg = new Argument<string>("search-path", "The directory or file that will be traversed and checked for any flagged malware according to the enabled hashsets.");
-            traverse.Add(searchPathArg);
+            Argument<FileSystemInfo> datPathArg = new Argument<FileSystemInfo>("path", "Path to hashset.");
+            cmdInstall.Add(datPathArg);
 
-            Argument<string> nameEnableArg = new Argument<string>("hashset-name", "The name of the hashlist that will be enabled.");
-            enableHashset.Add(nameEnableArg);
+            Argument<string> searchPathArg = new Argument<string>("target", "Target path to scan.");
+            cmdScan.Add(searchPathArg);
 
-            Argument<string> nameDisableArg = new Argument<string>("hashset-name", "The name of the hashlist that will be disabled.");
-            disableHashset.Add(nameDisableArg);
-
-            Argument<string> nameRemoveArg = new Argument<string>("hashset-name", "The name of the hashlist to be removed.");
-            removeHashet.Add(nameRemoveArg);
+            Argument<string> nameArg = new Argument<string>("name", "Hashset name.");
+            cmdEnable.Add(nameArg);
+            cmdDisable.Add(nameArg);
+            cmdRemove.Add(nameArg);
 
             // Add the commands to the root command.
-            rCommand.Add(installHashset);
-            rCommand.Add(listHashets);
-            rCommand.Add(compileHashlist);
-            rCommand.Add(removeHashet);
-            rCommand.Add(disableHashset);
-            rCommand.Add(enableHashset);
-            rCommand.Add(traverse);
-            rCommand.Add(renameHashset);
+            rCommand.Add(cmdInstall);
+            rCommand.Add(cmdList);
+            rCommand.Add(cmdCompile);
+            rCommand.Add(cmdRemove);
+            rCommand.Add(cmdDisable);
+            rCommand.Add(cmdEnable);
+            rCommand.Add(cmdScan);
 
             // Initialize the launchPath directory as "launchPath", the hashLists which will be responsible for holding data about the hashsets and the downloader.
             root();
             downloader = new Downloader(launchPath);
             hashLists = downloader.GetHashLists();
 
-            listHashets.SetHandler(() =>
-            {
-                Cmd_ListHashSets();
-            });
+            cmdList.SetHandler(ListHashSets);
 
-            compileHashlist.SetHandler((hashlist_input, hashset_output) =>
+            cmdCompile.SetHandler((hashlist_input) =>
             {
                 FileInfo? hashlistInput = null;
-                FileInfo? hashsetOutput = null;
 
                 switch (hashlist_input)
                 {
@@ -106,40 +88,25 @@ namespace HashAxe
                         break;
                 }
 
-                switch (hashset_output)
-                {
-                    case FileInfo file:
-                        hashsetOutput = file;
-                        break;
-                    default:
-                        Console.WriteLine("Hashset output is invalid");
-                        break;
-                }
+                CompileHashlist(hashlistInput);
+            }, hashlistPathArg);
 
-                Cmd_CompileHashlist(hashlistInput, hashsetOutput);
-            }, hashlistPathArg, hashetOutputArg);
-
-            removeHashet.SetHandler((string name) =>
+            cmdRemove.SetHandler((string name) =>
             {
-                Cmd_RemoveHashset(name);
-            }, nameRemoveArg);
+                RemoveHashset(name);
+            }, nameArg);
 
-            disableHashset.SetHandler((string name) =>
+            cmdDisable.SetHandler((string name) =>
             {
-                Cmd_DisableHashset(name);
-            }, nameDisableArg);
+                DisableHashset(name);
+            }, nameArg);
 
-            enableHashset.SetHandler((string name) =>
+            cmdEnable.SetHandler((string name) =>
             {
-                Cmd_EnableHashset(name);
-            }, nameEnableArg);
+                EnableHashset(name);
+            }, nameArg);
 
-            renameHashset.SetHandler((string oldName, string newName) =>
-            {
-                Cmd_RenameHashSet(oldName, newName);
-            }, oldNameArg, newNameArg);
-
-            installHashset.SetHandler((string name, FileSystemInfo path) =>
+            cmdInstall.SetHandler((FileSystemInfo path) =>
             {
                 FileInfo? datPath = null;
                 switch (path)
@@ -151,12 +118,12 @@ namespace HashAxe
                         Console.WriteLine("DAT Binary Path is invalid");
                         break;
                 }
-                Cmd_InstallHashset(name, datPath);
-            }, hashsetNameArg, datPathArg);
+                InstallHashset(datPath);
+            }, datPathArg);
 
-            traverse.SetHandler((string searchPath, bool verboseLogging) =>
+            cmdScan.SetHandler((string searchPath, bool verboseLogging) =>
             {
-                Cmd_Traverse(searchPath, verboseLogging);
+                Traverse(searchPath, verboseLogging);
             }, searchPathArg, isVerbose);
 
             await rCommand.InvokeAsync(args);
@@ -164,7 +131,7 @@ namespace HashAxe
 
         internal static void root()
         {
-            launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hashaxe");
+            launchPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".hashaxe");
             string hashsets_root = Path.Combine(launchPath, "hashsets");
             string temp_root = Path.Combine(launchPath, "temp");
             string config_root = Path.Combine(launchPath, "hashmap.json");
@@ -205,19 +172,14 @@ namespace HashAxe
             }
         }
 
-        internal static void Cmd_InstallHashset(string name, FileSystemInfo path)
+        internal static void InstallHashset(FileSystemInfo path)
         {
             // Check if name contains any invalid characters.
             int length = 0;
-            if (!Regex.IsMatch(name, @"^[a-zA-Z0-9]+$"))
-            {
-                LineOutput.LogFailure("The name of the hashset contains invalid characters. Please use only alphanumeric characters.");
-                return;
-            }
 
             if (!File.Exists(path.FullName))
             {
-                LineOutput.LogFailure("The file {0} does not exist or is not a valid .dat", path.FullName);
+                LineOutput.LogFailure("Could not find {0}", path.FullName);
                 return;
             }
             else
@@ -232,23 +194,24 @@ namespace HashAxe
 
             if (!path.FullName.EndsWith(".dat"))
             {
-                LineOutput.LogFailure("The file {0} is not a valid .dat", path.FullName);
+                LineOutput.LogFailure("Not a valid Hashset.");
                 return;
             }
 
-            if (hashLists.ContainsKey(name))
-            {
-                LineOutput.LogFailure("HashSet with the same name already exists.");
-                return;
+            string name = path.Name;
+            int next = 1;
+
+            while (hashLists.ContainsKey(name)) {
+                name = $"{path.Name}_{next}";
+                next++;
             }
 
             try
             {
                 string fileName = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".dat";
                 File.Copy(path.FullName, Path.Combine(launchPath, "hashsets", fileName));
-                LineOutput.LogSuccess("Copied {0} to {1}", path.FullName, Path.Combine(launchPath, "hashsets", fileName));
-
                 hashLists.Add(name, new Downloader.HashList(name, length, true, fileName));
+
                 downloader.UploadJson(hashLists.Values.ToList());
                 LineOutput.LogSuccess("Installed hashset into configuration");
             }
@@ -260,33 +223,35 @@ namespace HashAxe
             }
         }
 
-        internal static void Cmd_CompileHashlist(FileInfo hashlist_input, FileInfo hashset_output)
+        internal static void CompileHashlist(FileInfo input)
         {
             bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             Console.WriteLine("Compiling new HashSet from Hashlist");
-            Console.WriteLine("Hashlist Input: {0}", hashlist_input.FullName);
-            Console.WriteLine("Hashset Output: {0}", hashset_output.FullName);
+            Console.WriteLine("Hashlist Input: {0}", input.FullName);
 
             try
             {
                 downloader.DeleteTemp();
-                long length = new System.IO.FileInfo(hashlist_input.FullName).Length;
+                long length = new System.IO.FileInfo(input.FullName).Length;
 
                 int totalLength;
+                int positionAdd;
+                int uploadedNum = 0;
+
                 if (isWindows)
                 {
                     totalLength = (int)((length + 2) / 34);
+                    positionAdd = 2;
                 }
                 else
                 {
                     totalLength = (int)((length + 2) / 33);
+                    positionAdd = 1;
                 }
-                int uploadedNum = 0;
-
+                
                 Console.WriteLine("Compiling HashSet, this may take a while..\n");
-                string hashsetFileName = Hash.sha256(DateTime.Now.ToString()) + ".dat";
 
-                using (BufferedStream fs = new BufferedStream(File.Create(hashset_output.FullName)))
+                using (BufferedStream fs = new BufferedStream(File.Create($"{input.Name}.dat")))
                 {
                     Console.WriteLine("Percentage of Hashes Loaded:");
                     Console.Write("0%");
@@ -295,22 +260,16 @@ namespace HashAxe
                     hashSet.FillHashes();
 
                     long prev = 0;
-                    using (BufferedStream bs = new BufferedStream(File.OpenRead(hashlist_input.FullName)))
+                    using (BufferedStream bs = new BufferedStream(File.OpenRead(input.FullName)))
                     {
                         byte[] buffer = new byte[32];
                         for (int i = 0; i < totalLength; i++)
                         {
                             bs.Read(buffer, 0, 32);
+                            buffer = Encoding.ASCII.GetBytes(Encoding.ASCII.GetString(buffer).ToLower());
                             hashSet.UploadHash(buffer);
                             uploadedNum++;
-                            if (isWindows)
-                            {
-                                bs.Position += 2;
-                            }
-                            else
-                            {
-                                bs.Position += 1;
-                            }
+                            bs.Position += positionAdd;
 
                             long cur = uploadedNum * 100L / totalLength;
                             if (prev != cur)
@@ -326,7 +285,6 @@ namespace HashAxe
                 Console.WriteLine();
                 LineOutput.LogSuccess("HashSet successfully compiled:");
                 Console.WriteLine("# OF HASHES: {0}", totalLength);
-                Console.WriteLine("OUTPUT: {0}", hashset_output.FullName);
             }
             catch (Exception e)
             {
@@ -336,15 +294,21 @@ namespace HashAxe
             }
             finally
             {
-                downloader.DeleteTemp();
                 Console.WriteLine("\nCleaning up..");
+                downloader.DeleteTemp();
             }
         }
 
-        internal static void Cmd_RemoveHashset(string name)
+        internal static void RemoveHashset(string name)
         {
+            if (!hashLists.ContainsKey(name))
+            {
+                LineOutput.LogFailure("Hashset does not exist.");
+                return;
+            }
+
             Regex regex = new Regex(@"(?i)y(es)?");
-            Console.Write("Are you sure that you want to delete the hash set {0}? [Y/n]: ", name);
+            Console.Write("Are you sure that you want to delete the hashset {0}? [Y/n]: ", name);
             string? response = Console.ReadLine();
 
             if (String.IsNullOrEmpty(response) || !regex.IsMatch(response))
@@ -353,33 +317,25 @@ namespace HashAxe
                 return;
             }
 
-            if (!hashLists.ContainsKey(name))
-            {
-                LineOutput.LogFailure(String.Format("The hash set under the name {0} does not exist.", name));
-            }
-            else
-            {
-                Downloader.HashList toRemove = hashLists[name];
-                string path = Path.Combine(launchPath, "hashsets", toRemove.hashset_source);
-                File.Delete(path);
+            Downloader.HashList toRemove = hashLists[name];
+            string path = Path.Combine(launchPath, "hashsets", toRemove.hashset_source);
+            File.Delete(path);
 
-                hashLists.Remove(name);
-                try
-                {
-                    downloader.UploadJson(hashLists.Values.ToList());
-                    LineOutput.LogSuccess(String.Format("The hash set {0} has been removed.", name));
+            hashLists.Remove(name);
+            try
+            {
+                downloader.UploadJson(hashLists.Values.ToList());
+                LineOutput.LogSuccess(String.Format("{0} Removed.", name));
 
-                }
-                catch (Exception e)
-                {
-                    LineOutput.LogFailure(String.Format("There was an unexpected error when attempting to remove the hashset {0}.", name));
-                    LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
-                }
             }
-            return;
+            catch (Exception e)
+            {
+                LineOutput.LogFailure(String.Format("Unexpected error removing hashset {0}.", name));
+                LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
+            }
         }
 
-        internal static void Cmd_DisableHashset(string name)
+        internal static void DisableHashset(string name)
         {
             if (hashLists.ContainsKey(name))
             {
@@ -395,17 +351,17 @@ namespace HashAxe
             try
             {
                 downloader.UploadJson(hashLists.Values.ToList());
-                LineOutput.LogSuccess(String.Format("HashAxe has disabled the hash set {0}.", name));
+                LineOutput.LogSuccess(String.Format("{0} Disabled.", name));
             }
             catch (Exception e)
             {
-                LineOutput.LogFailure(String.Format("There was an unexpected error when attempting to disable the hashset {0}.", name));
+                LineOutput.LogFailure(String.Format("Unexpected error disabling {0}.", name));
                 LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
             }
             return;
         }
 
-        internal static void Cmd_EnableHashset(string name)
+        internal static void EnableHashset(string name)
         {
             Console.WriteLine("Name: " + name);
             if (hashLists.ContainsKey(name))
@@ -431,54 +387,29 @@ namespace HashAxe
             return;
         }
 
-        internal static void Cmd_RenameHashSet(string oldName, string newName)
-        {
-            if (hashLists.ContainsKey(newName))
-            {
-                LineOutput.LogFailure(String.Format("Exiting Command: There already exists a hash set under the name {0}", newName));
-                return;
-            }
-            else if (hashLists.ContainsKey(oldName))
-            {
-                hashLists[oldName].name = newName;
-            }
-            else
-            {
-                LineOutput.LogFailure(String.Format("Exiting Command: No Hashlists under the name {0} found.", oldName));
-                return;
-            }
-
-            try
-            {
-                downloader.UploadJson(hashLists.Values.ToList());
-                LineOutput.LogSuccess(String.Format("The hash set {0} was renamed to {1}.", oldName, newName));
-            }
-            catch (Exception e)
-            {
-                LineOutput.LogFailure(String.Format("An unexpected error occurred when renaming {0} to {1}.", oldName, newName));
-                LineOutput.LogFailure(String.Format("Error Message: {0}", e.Message));
-            }
-            return;
-        }
-
-        internal static void Cmd_ListHashSets()
+        internal static void ListHashSets()
         {
             foreach (Downloader.HashList entry in hashLists.Values)
             {
                 Console.WriteLine("-------------------------------------------------------------------------");
                 Console.WriteLine("NAME             | {0}", entry.name);
-                Console.WriteLine("TIME OF CREATION | {0}", entry.hashset_source.Substring(0, entry.hashset_source.Length - 4));
                 Console.WriteLine("# OF HASHES      | {0}", entry.NUM_HASHES);
                 Console.WriteLine("ENABLED          | {0}", entry.enabled ? "YES" : "NO");
             }
-            Console.WriteLine("-------------------------------------------------------------------------");
+
+            if (hashLists.Values.Count > 0) {
+                Console.WriteLine("-------------------------------------------------------------------------");
+            }
+
             return;
         }
 
-        internal static void Cmd_Traverse(string searchPath, bool verboseLogging)
+        internal static void Traverse(string searchPath, bool verboseLogging)
         {
             Traverser traverser;
             HashSet<string> flagged = new HashSet<string>();
+
+
 
             foreach (Downloader.HashList hashList in hashLists.Values)
             {
