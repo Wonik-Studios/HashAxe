@@ -43,14 +43,14 @@ Open a terminal in the extracted directory. Give the binary executable access by
 
 # Compiling From Source
 
-You will need the [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) to be able to compile the HashAxe source code to create an executable. Begin by downloading the source code from the release you want to compile, and extracting it.
+You will need the [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) to be able to compile the HashAxe source code to create an executable. Begin by downloading the source code from the release you want to compile, and extracting it. Other versions of the .NET SDK have not been tested.
 
 Open a terminal in the source code folder, and run the follwing:
 ```sh
 dotnet publish
 ```
 
-If you are compiling for a different platform then the one you are on, you can use the `-r` option to specify the runtime identifier (here are a list of [rupported runtime identifiers](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)). For example, compiling for linux on x64:
+If you are compiling for a different platform then the one you are on, you can use the `-r` option to specify the runtime identifier (here are a list of [supported runtime identifiers](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)). For example, compiling for linux on x64:
 ```sh
 dotnet publish -r linux-x64
 ```
