@@ -2,7 +2,6 @@
 #pragma warning disable CS8604
 
 using System.CommandLine;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Text;
